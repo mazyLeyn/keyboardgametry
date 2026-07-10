@@ -3,151 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <title>KAS HAFIZASI</title>
-<meta name="description" content="Retro klavye yazma oyunu">
+<meta name="description" content="Retro mekanik klavye yazma oyunu">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg1:#1a1025;
-    --bg2:#2a1f3d;
-    --amber:#f5a623;
-    --amber-dim:rgba(245,166,35,0.3);
-    --rose:#e8668a;
-    --rose-dim:rgba(232,102,138,0.3);
-    --lavender:#b48eff;
-    --mint:#6dd4b1;
-    --text:#ede6f5;
-    --text-dim:rgba(237,230,245,0.45);
-    --miss:#ff4757;
-  }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{
     height:100%; overflow:hidden;
     font-family:'Inter', system-ui, sans-serif;
     -webkit-font-smoothing:antialiased;
   }
-  body{
-    background: linear-gradient(160deg, #1a1025 0%, #2a1f3d 40%, #1e1535 100%);
-  }
+  body{ background:#2c2420; }
   #stage{ position:relative; width:100%; height:100vh; }
   canvas{ position:absolute; top:0; left:0; display:block; }
-
-  /* Soft retro scanlines */
-  #scanlines{
-    position:absolute; top:0; left:0; width:100%; height:100%;
-    pointer-events:none; opacity:0.04;
-    background:repeating-linear-gradient(
-      to bottom, transparent 0px, transparent 2px,
-      rgba(255,255,255,0.15) 2px, rgba(255,255,255,0.15) 3px
-    );
-  }
-
-  /* CRT warm vignette */
-  #vignette{
-    position:absolute; top:0; left:0; width:100%; height:100%;
-    pointer-events:none;
-    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(10,5,18,0.5) 100%);
-  }
-
-  /* Subtle CRT flicker */
-  #crt-overlay{
-    position:absolute; top:0; left:0; width:100%; height:100%;
-    pointer-events:none;
-    animation: crtFlicker 8s infinite;
-  }
-  @keyframes crtFlicker{
-    0%,100%{opacity:0;}
-    94%{opacity:0;}
-    95%{opacity:0.015;}
-    96%{opacity:0;}
-  }
 
   #hud{
     position:absolute; top:0; left:0; right:0;
     display:flex; justify-content:space-between; align-items:center;
-    padding:16px 28px; pointer-events:none;
+    padding:16px 28px; pointer-events:none; z-index:10;
   }
   .hud-box{
-    background: rgba(255,255,255,0.04);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(44,36,32,0.85);
+    backdrop-filter: blur(8px);
     border:1px solid rgba(255,255,255,0.06);
-    border-radius:10px;
+    border-radius:8px;
     padding:7px 16px;
-    color:var(--text-dim);
-    font-size:11px;
-    font-weight:600;
-    letter-spacing:1.8px;
-    text-transform:uppercase;
+    color:rgba(210,195,180,0.6);
+    font-size:11px; font-weight:600;
+    letter-spacing:1.8px; text-transform:uppercase;
     font-family:'JetBrains Mono', monospace;
   }
-  .hud-box .label{opacity:0.6;}
-  .hud-box .value{color:var(--amber); margin-left:6px;}
+  .hud-box .value{color:#d4a855; margin-left:6px;}
   .hud-title{
-    color:var(--text-dim);
-    font-size:11px;
-    letter-spacing:3px;
-    font-weight:500;
+    color:rgba(210,195,180,0.4);
+    font-size:11px; letter-spacing:3px; font-weight:500;
     font-family:'JetBrains Mono', monospace;
   }
 
   #combo-wrap{
-    position:absolute; top:72px; left:50%; transform:translateX(-50%);
-    pointer-events:none; text-align:center;
+    position:absolute; top:70px; left:50%; transform:translateX(-50%);
+    pointer-events:none; text-align:center; z-index:10;
   }
   #combo{
     font-size:13px; font-weight:700; letter-spacing:3px;
     font-family:'JetBrains Mono', monospace;
-    color:var(--lavender);
-    text-shadow:0 0 16px rgba(180,142,255,0.4);
+    color:#d4a855; text-shadow:0 0 12px rgba(212,168,85,0.3);
     transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1);
   }
   #combo.pop{ transform:scale(1.25); }
 
   #streak{
-    position:absolute; top:98px; left:50%; transform:translateX(-50%);
-    pointer-events:none; font-size:11px;
+    position:absolute; top:96px; left:50%; transform:translateX(-50%);
+    pointer-events:none; font-size:10px;
     font-family:'JetBrains Mono', monospace;
     letter-spacing:2px; font-weight:700;
-    color:var(--amber);
-    text-shadow:0 0 12px var(--amber-dim);
-    opacity:0; transition: opacity 0.3s ease;
+    color:#c45c4a; text-shadow:0 0 10px rgba(196,92,74,0.3);
+    opacity:0; transition:opacity 0.3s ease; z-index:10;
   }
-  #streak.show{ opacity:1; }
+  #streak.show{opacity:1;}
 
   #log{
-    position:absolute; bottom:60px; left:28px;
-    color:var(--text-dim); font-size:11px; line-height:1.8;
+    position:absolute; bottom:56px; left:28px;
+    color:rgba(210,195,180,0.35); font-size:11px; line-height:1.8;
     max-height:120px; overflow:hidden; pointer-events:none;
-    font-family:'JetBrains Mono', monospace;
+    font-family:'JetBrains Mono', monospace; z-index:10;
   }
-  #log div{
-    opacity:0; animation:logIn 0.25s ease forwards;
-  }
+  #log div{ opacity:0; animation:logIn 0.25s ease forwards; }
   @keyframes logIn{
-    from{opacity:0; transform:translateY(6px);}
-    to{opacity:1; transform:translateY(0);}
+    from{opacity:0;transform:translateY(6px);}
+    to{opacity:1;transform:translateY(0);}
   }
-  #log span.hit{color:var(--mint); text-shadow:0 0 6px rgba(109,212,177,0.25);}
-  #log span.miss{color:var(--miss); text-shadow:0 0 6px rgba(255,71,87,0.25);}
+  #log span.hit{color:#8aad7a;}
+  #log span.miss{color:#c45c4a;}
 
   #footer{
     position:absolute; bottom:20px; left:0; right:0;
     text-align:center; font-size:11px;
     pointer-events:none; font-weight:500;
-    color:var(--text-dim);
+    color:rgba(210,195,180,0.25);
     letter-spacing:1.5px;
-    font-family:'JetBrains Mono', monospace;
+    font-family:'JetBrains Mono', monospace; z-index:10;
   }
 </style>
 </head>
 <body>
 <div id="stage">
   <canvas id="c"></canvas>
-  <div id="scanlines"></div>
-  <div id="crt-overlay"></div>
-  <div id="vignette"></div>
   <div id="hud">
     <div class="hud-box"><span class="label">TEMPO</span><span class="value" id="tempo">100%</span></div>
     <div class="hud-title">KAS HAFIZASI</div>
@@ -165,217 +107,88 @@ const ctx = canvas.getContext('2d');
 let W, H, CX, CY;
 
 function resize(){
-  W = canvas.width  = window.innerWidth;
+  W = canvas.width = window.innerWidth;
   H = canvas.height = window.innerHeight;
   CX = W/2; CY = H/2;
 }
 window.addEventListener('resize', resize);
 resize();
 
-// ── Audio ──
+/* ── Seeded random for consistent sketch lines per key ── */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* ── Audio ── */
 let audioCtx = null;
 function ensureAudio(){
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
 }
 let noiseBuffer = null;
 function getNoiseBuffer(){
   ensureAudio();
-  if (noiseBuffer) return noiseBuffer;
-  const size = audioCtx.sampleRate * 0.08;
-  noiseBuffer = audioCtx.createBuffer(1, size, audioCtx.sampleRate);
-  const data = noiseBuffer.getChannelData(0);
-  for (let i=0;i<size;i++) data[i]=Math.random()*2-1;
+  if(noiseBuffer) return noiseBuffer;
+  const sz = audioCtx.sampleRate*0.08;
+  noiseBuffer = audioCtx.createBuffer(1,sz,audioCtx.sampleRate);
+  const d = noiseBuffer.getChannelData(0);
+  for(let i=0;i<sz;i++) d[i]=Math.random()*2-1;
   return noiseBuffer;
 }
-
 function keyClack(type){
   try{
     ensureAudio();
-    const t = audioCtx.currentTime;
-    const hit = type==='hit';
-    // Noise burst
-    const src = audioCtx.createBufferSource();
-    src.buffer = getNoiseBuffer();
-    const flt = audioCtx.createBiquadFilter();
-    flt.type='bandpass';
-    flt.frequency.value = hit ? (2800+Math.random()*600) : (1000+Math.random()*300);
-    flt.Q.value = hit ? 1.4 : 0.9;
-    const ng = audioCtx.createGain();
-    ng.gain.setValueAtTime(hit?0.12:0.04, t);
-    ng.gain.exponentialRampToValueAtTime(0.0001, t+(hit?0.04:0.03));
-    src.connect(flt); flt.connect(ng); ng.connect(audioCtx.destination);
-    src.start(t); src.stop(t+0.05);
-    // Thump
-    const osc = audioCtx.createOscillator();
-    const og = audioCtx.createGain();
-    osc.type='sine';
-    osc.frequency.setValueAtTime(hit?(520+Math.random()*120):280, t);
-    osc.frequency.exponentialRampToValueAtTime(hit?360:180, t+0.05);
-    og.gain.setValueAtTime(hit?0.06:0.025, t);
-    og.gain.exponentialRampToValueAtTime(0.0001, t+0.05);
-    osc.connect(og); og.connect(audioCtx.destination);
-    osc.start(t); osc.stop(t+0.06);
+    const t=audioCtx.currentTime, hit=type==='hit';
+    const src=audioCtx.createBufferSource();
+    src.buffer=getNoiseBuffer();
+    const f=audioCtx.createBiquadFilter();
+    f.type='bandpass';
+    f.frequency.value=hit?(2400+Math.random()*500):(900+Math.random()*200);
+    f.Q.value=hit?1.3:0.8;
+    const g=audioCtx.createGain();
+    g.gain.setValueAtTime(hit?0.14:0.04,t);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+(hit?0.045:0.035));
+    src.connect(f);f.connect(g);g.connect(audioCtx.destination);
+    src.start(t);src.stop(t+0.05);
+    const o=audioCtx.createOscillator(),og=audioCtx.createGain();
+    o.type='sine';
+    o.frequency.value=hit?160:90;
+    og.gain.setValueAtTime(hit?0.06:0.025,t);
+    og.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
+    o.connect(og);og.connect(audioCtx.destination);
+    o.start(t);o.stop(t+0.045);
   }catch(e){}
 }
-
 function playSuccess(){
   try{
     ensureAudio();
-    const t = audioCtx.currentTime;
-    const notes = [523.25,659.25,783.99,1046.50];
-    notes.forEach((freq,i)=>{
-      const s=t+i*0.055, d=0.28;
-      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-      o.type='triangle'; o.frequency.value=freq;
+    const t=audioCtx.currentTime;
+    [523.25,659.25,783.99,1046.50].forEach((freq,i)=>{
+      const s=t+i*0.055,d=0.26;
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type='triangle';o.frequency.value=freq;
       g.gain.setValueAtTime(0.0001,s);
-      g.gain.linearRampToValueAtTime(0.08,s+0.01);
+      g.gain.linearRampToValueAtTime(0.07,s+0.01);
       g.gain.exponentialRampToValueAtTime(0.0001,s+d);
-      o.connect(g); g.connect(audioCtx.destination);
-      o.start(s); o.stop(s+d+0.02);
+      o.connect(g);g.connect(audioCtx.destination);
+      o.start(s);o.stop(s+d+0.02);
     });
   }catch(e){}
 }
 
-// ── Particles ──
-const particles = [];
-const PCOLORS = [
-  {r:245,g:166,b:35},{r:232,g:102,b:138},{r:180,g:142,b:255},
-  {r:109,g:212,b:177},{r:110,g:180,b:255}
-];
-function initParticles(){
-  for(let i=0;i<45;i++) particles.push(mkParticle(false));
-}
-function mkParticle(bottom){
-  const c = PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
-  return {
-    x:Math.random()*W, y:bottom?H+10:Math.random()*H,
-    vx:(Math.random()-0.5)*0.25, vy:-(0.12+Math.random()*0.3),
-    size:1+Math.random()*2.5,
-    alpha:0.08+Math.random()*0.2,
-    color:c, phase:Math.random()*Math.PI*2, ps:0.4+Math.random()*1.2
-  };
-}
-function drawParticles(dt){
-  for(let i=0;i<particles.length;i++){
-    const p=particles[i];
-    p.x+=p.vx; p.y+=p.vy; p.phase+=p.ps*dt;
-    const a=p.alpha*(0.5+0.5*Math.sin(p.phase));
-    const s=p.size*(0.8+0.2*Math.sin(p.phase));
-    ctx.fillStyle=`rgba(${p.color.r},${p.color.g},${p.color.b},${a})`;
-    ctx.beginPath(); ctx.arc(p.x,p.y,s,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle=`rgba(${p.color.r},${p.color.g},${p.color.b},${a*0.25})`;
-    ctx.beginPath(); ctx.arc(p.x,p.y,s*2.5,0,Math.PI*2); ctx.fill();
-    if(p.y<-20) particles[i]=mkParticle(true);
-  }
-}
-
-// ── Sparkles ──
-const sparkles = [];
-function spawnSparkles(x,y,n,col){
-  for(let i=0;i<n;i++){
-    const a=Math.random()*Math.PI*2, sp=50+Math.random()*160;
-    const c=col||PCOLORS[Math.floor(Math.random()*PCOLORS.length)];
-    sparkles.push({
-      x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-30,
-      life:0.4+Math.random()*0.4, ml:0.4+Math.random()*0.4,
-      size:1.5+Math.random()*2.5, color:c,
-      rot:Math.random()*Math.PI*2, rs:(Math.random()-0.5)*10
-    });
-  }
-}
-function drawSparkles(dt){
-  for(let i=sparkles.length-1;i>=0;i--){
-    const s=sparkles[i];
-    s.x+=s.vx*dt; s.y+=s.vy*dt; s.vy+=180*dt;
-    s.life-=dt; s.rot+=s.rs*dt;
-    if(s.life<=0){sparkles.splice(i,1);continue;}
-    const a=s.life/s.ml, sz=s.size*a;
-    ctx.save(); ctx.translate(s.x,s.y); ctx.rotate(s.rot);
-    ctx.fillStyle=`rgba(${s.color.r},${s.color.g},${s.color.b},${a})`;
-    // 4-point star
-    ctx.beginPath();
-    for(let p=0;p<4;p++){
-      const ang=(p/4)*Math.PI*2;
-      ctx.lineTo(Math.cos(ang)*sz, Math.sin(ang)*sz);
-      ctx.lineTo(Math.cos(ang+Math.PI/4)*sz*0.3, Math.sin(ang+Math.PI/4)*sz*0.3);
-    }
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle=`rgba(${s.color.r},${s.color.g},${s.color.b},${a*0.15})`;
-    ctx.beginPath(); ctx.arc(0,0,sz*2.5,0,Math.PI*2); ctx.fill();
-    ctx.restore();
-  }
-}
-
-// ── Confetti ──
-const confetti = [];
-function spawnConfetti(x,y){
-  const cols = PCOLORS;
-  for(let i=0;i<28;i++){
-    const a=-Math.PI/2+(Math.random()-0.5)*Math.PI*1.2, sp=140+Math.random()*280;
-    const c=cols[Math.floor(Math.random()*cols.length)];
-    confetti.push({
-      x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp,
-      life:0.9+Math.random()*0.7, ml:0.9+Math.random()*0.7,
-      w:3+Math.random()*5, h:2.5+Math.random()*3.5,
-      color:c, rot:Math.random()*Math.PI*2, rs:(Math.random()-0.5)*12
-    });
-  }
-}
-function drawConfetti(dt){
-  for(let i=confetti.length-1;i>=0;i--){
-    const c=confetti[i];
-    c.x+=c.vx*dt; c.y+=c.vy*dt; c.vy+=300*dt; c.vx*=0.99;
-    c.life-=dt; c.rot+=c.rs*dt;
-    if(c.life<=0){confetti.splice(i,1);continue;}
-    const a=Math.min(1,c.life/(c.ml*0.3));
-    ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
-    ctx.fillStyle=`rgba(${c.color.r},${c.color.g},${c.color.b},${a})`;
-    ctx.fillRect(-c.w/2,-c.h/2,c.w,c.h);
-    ctx.restore();
-  }
-}
-
-// ── Background orbs ──
-const orbs = [];
-function initOrbs(){
-  PCOLORS.forEach((c,i)=>{
-    orbs.push({
-      x:Math.random()*W, y:Math.random()*H,
-      vx:(Math.random()-0.5)*0.35, vy:(Math.random()-0.5)*0.25,
-      radius:100+Math.random()*160, color:c, phase:Math.random()*Math.PI*2
-    });
-  });
-}
-function drawOrbs(now){
-  ctx.save();
-  ctx.globalCompositeOperation='screen';
-  for(const o of orbs){
-    o.x+=o.vx; o.y+=o.vy;
-    if(o.x<-o.radius)o.x=W+o.radius;
-    if(o.x>W+o.radius)o.x=-o.radius;
-    if(o.y<-o.radius)o.y=H+o.radius;
-    if(o.y>H+o.radius)o.y=-o.radius;
-    const pulse=0.6+0.4*Math.sin(now/1000*0.4+o.phase);
-    const a=0.02*pulse;
-    const g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.radius);
-    g.addColorStop(0,`rgba(${o.color.r},${o.color.g},${o.color.b},${a})`);
-    g.addColorStop(1,`rgba(${o.color.r},${o.color.g},${o.color.b},0)`);
-    ctx.fillStyle=g;
-    ctx.beginPath(); ctx.arc(o.x,o.y,o.radius,0,Math.PI*2); ctx.fill();
-  }
-  ctx.restore();
-}
-
-// ── State ──
+/* ── State ── */
 const state = {
-  tempo:1, targetTempo:1,
-  combo:0, maxCombo:0,
+  tempo:1, targetTempo:1, combo:0, maxCombo:0,
   wordsCompleted:0, wordsMissed:0,
   glitch:0, frozenUntil:0,
   shake:0, sx:0, sy:0
 };
 
-// ── Word Pool ──
+/* ── Words ── */
 const WORD_POOL = [
   'SES','YOL','ANI','TON','GÜÇ','HIZ','KAÇ','TUŞ','SIR','AŞK','GÖZ','KOL','ISI','ZİL','TAŞ','KUM','SAZ',
   'ATEŞ','IŞIK','ODAK','AKIŞ','NOTA','RÜYA','PEÇE','TREN','KAPI','ÇARK','UYUM','DOKU','SIRT','İVME','DOLU','KATI','SIVI','AĞIR',
@@ -392,16 +205,16 @@ function spawnWord(){
     letters, index:0,
     spawnedAt:performance.now(),
     duration:letters.length*MS_PER_LETTER,
-    boxes:letters.map(()=>({wf:0,pf:0,bounce:0})),
+    boxes:letters.map((_,i)=>({wf:0,pf:0,bounce:0,seed:Math.floor(Math.random()*99999+i*1000)})),
     enter:0
   };
 }
 
-// ── Feedback ──
-const logEl = document.getElementById('log');
-function logLine(text,cls){
+/* ── HUD ── */
+const logEl=document.getElementById('log');
+function logLine(t,c){
   const d=document.createElement('div');
-  d.innerHTML=`<span class="${cls}">${text}</span>`;
+  d.innerHTML=`<span class="${c}">${t}</span>`;
   logEl.prepend(d);
   while(logEl.childNodes.length>6) logEl.removeChild(logEl.lastChild);
 }
@@ -412,18 +225,15 @@ function updateHud(){
   comboEl.classList.add('pop');
   setTimeout(()=>comboEl.classList.remove('pop'),120);
   document.getElementById('tempo').textContent=`${Math.round(state.tempo*100)}%`;
-  const total=state.wordsCompleted+state.wordsMissed;
-  const acc=total?Math.round((state.wordsCompleted/total)*100):null;
+  const tot=state.wordsCompleted+state.wordsMissed;
+  const acc=tot?Math.round((state.wordsCompleted/tot)*100):null;
   document.getElementById('acc').textContent=acc===null?'--':acc+'%';
   if(state.combo>=5){
     streakEl.classList.add('show');
-    streakEl.textContent = state.combo>=15?'UNSTOPPABLE':state.combo>=10?'ON FIRE':state.combo>=5?'STREAK x'+state.combo:'';
-  } else {
-    streakEl.classList.remove('show');
-  }
+    streakEl.textContent=state.combo>=15?'UNSTOPPABLE':state.combo>=10?'ON FIRE':'STREAK x'+state.combo;
+  } else streakEl.classList.remove('show');
 }
-
-function wordCenter(){ return {x:CX, y:CY+10}; }
+function wordCenter(){return{x:CX,y:CY+10};}
 
 function completeWord(){
   const c=wordCenter();
@@ -432,17 +242,23 @@ function completeWord(){
   state.wordsCompleted+=1;
   state.targetTempo=Math.min(1.15,1.0+state.combo*0.015);
   playSuccess();
-  spawnConfetti(c.x,c.y);
-  spawnSparkles(c.x,c.y,18);
+  // subtle burst
+  for(let i=0;i<12;i++){
+    const a=Math.random()*Math.PI*2, sp=60+Math.random()*120;
+    bursts.push({
+      x:c.x, y:c.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-50,
+      life:0.6+Math.random()*0.4, ml:0.6+Math.random()*0.4,
+      size:2+Math.random()*2,
+      type: Math.random()>0.5?'gold':'cream'
+    });
+  }
   logLine(`TAMAM  '${word.letters.join('')}'  +combo ${state.combo}`,'hit');
   updateHud();
   word=null; nextSpawnAt=performance.now()+480;
 }
 function missWord(reason){
-  state.combo=0;
-  state.wordsMissed+=1;
-  state.glitch=0.25;
-  state.shake=0.3;
+  state.combo=0; state.wordsMissed+=1;
+  state.glitch=0.2; state.shake=0.25;
   state.targetTempo=Math.max(0.7,state.tempo-0.1);
   state.frozenUntil=performance.now()+220;
   logLine(`KACTI  '${word.letters.join('')}'  (${reason})`,'miss');
@@ -452,29 +268,51 @@ function missWord(reason){
 
 window.addEventListener('keydown',(e)=>{
   const key=e.key.toLocaleUpperCase('tr-TR');
-  if(!word) return;
-  if(performance.now()<state.frozenUntil) return;
+  if(!word||performance.now()<state.frozenUntil) return;
   const expected=word.letters[word.index];
   if(key===expected){
     word.boxes[word.index].pf=1;
     word.boxes[word.index].bounce=1;
     word.index+=1;
     keyClack('hit');
-    const c=wordCenter();
-    const boxW=52,gap=10;
+    const c=wordCenter(), boxW=56, gap=12;
     const totalW=word.letters.length*boxW+(word.letters.length-1)*gap;
     const startX=c.x-totalW/2;
     const bx=startX+(word.index-1)*(boxW+gap)+boxW/2;
-    spawnSparkles(bx,c.y-10,5);
+    for(let i=0;i<4;i++){
+      const a=Math.random()*Math.PI*2,sp=30+Math.random()*80;
+      bursts.push({x:bx,y:c.y-8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-30,
+        life:0.3+Math.random()*0.3,ml:0.3+Math.random()*0.3,size:1.5+Math.random()*1.5,type:'gold'});
+    }
     if(word.index>=word.letters.length) completeWord();
   } else if(/^[A-ZÇĞİÖŞÜ]$/.test(key)){
     word.boxes[word.index].wf=1;
-    state.shake=0.1;
+    state.shake=0.08;
     keyClack('wrong');
   }
 });
 
-// ── Drawing helpers ──
+/* ── Burst particles (subtle, not cute) ── */
+const bursts=[];
+function drawBursts(dt){
+  for(let i=bursts.length-1;i>=0;i--){
+    const b=bursts[i];
+    b.x+=b.vx*dt; b.y+=b.vy*dt; b.vy+=200*dt;
+    b.life-=dt;
+    if(b.life<=0){bursts.splice(i,1);continue;}
+    const a=b.life/b.ml;
+    if(b.type==='gold'){
+      ctx.fillStyle=`rgba(212,168,85,${a*0.7})`;
+    } else {
+      ctx.fillStyle=`rgba(230,220,200,${a*0.5})`;
+    }
+    ctx.beginPath();
+    ctx.arc(b.x,b.y,b.size*a,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+/* ── Helpers ── */
 function roundRect(x,y,w,h,r){
   ctx.beginPath();
   ctx.moveTo(x+r,y);
@@ -485,295 +323,442 @@ function roundRect(x,y,w,h,r){
   ctx.closePath();
 }
 
-// ── REALISTIC KEYCAP ──
-// Draws a mechanical keyboard keycap with:
-// - Housing base (darker, the "switch plate")
-// - Side walls with gradient (the keycap body seen from front/sides)
-// - Concave top surface with slight dish
-// - Inner dish shadow for concavity
-// - Legend (letter) with subtle emboss
-// - Rim highlight
-function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce){
-  // status: 'done', 'active', 'waiting'
-  const depth = 9;
-  const pressedDepth = 2;
-  const currentDepth = depth - (depth - pressedDepth)*liftT;
-  const r = 7;
-  const innerPad = 3;
-  const bounceOff = Math.sin(bounce*Math.PI)*-10;
+/* ═══════════════════════════════════════════════════════
+   REALISTIC KEYCAP — Manga/sketch style as in the photo
+   ═══════════════════════════════════════════════════════
+   Renders a tall-profile (SA-like) keycap with:
+   - Cream/off-white body with visible sketch-line texture
+   - Gold/amber accent for active key
+   - Charcoal for completed keys  
+   - Proper thick side walls and rounded top
+   - Inner concave dish
+   - Sketch lines on surface (manga art style)
+   ═══════════════════════════════════════════════════════ */
+
+// Color palettes per status
+const KEYCAP_PALETTES = {
+  waiting: {
+    topHi:'#e8e0d4', topLo:'#d5cdc0',
+    wallHi:'#c8c0b2', wallLo:'#a89e90',
+    rimHi:'#f0ebe3', dishShadow:'rgba(0,0,0,0.08)',
+    legend:'#3a3530', legendShadow:'rgba(0,0,0,0.15)',
+    sketchColor:'rgba(80,70,60,0.06)',
+    glow:null
+  },
+  active: {
+    topHi:'#daa54a', topLo:'#c48a30',
+    wallHi:'#b07825', wallLo:'#8a5e1a',
+    rimHi:'#eec470', dishShadow:'rgba(0,0,0,0.12)',
+    legend:'#fff8ee', legendShadow:'rgba(0,0,0,0.25)',
+    sketchColor:'rgba(100,70,20,0.08)',
+    glow:'rgba(212,168,85,0.3)'
+  },
+  done: {
+    topHi:'#4a4540', topLo:'#3a3530',
+    wallHi:'#332e2a', wallLo:'#2a2520',
+    rimHi:'#5a5550', dishShadow:'rgba(0,0,0,0.15)',
+    legend:'#b0a898', legendShadow:'rgba(0,0,0,0.3)',
+    sketchColor:'rgba(200,190,170,0.04)',
+    glow:null
+  },
+  wrong: { // flash overlay values
+    fill:'rgba(196,92,74,',
+    stroke:'rgba(196,92,74,'
+  }
+};
+
+function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, seed){
+  const DEPTH_REST = 10;
+  const DEPTH_PRESS = 2;
+  const currentDepth = DEPTH_REST - (DEPTH_REST-DEPTH_PRESS)*liftT;
+  const r = 6;
+  const bounceOff = Math.sin(bounce*Math.PI)*-8;
+  const pal = KEYCAP_PALETTES[status];
 
   ctx.save();
   ctx.translate(cx, cy + bounceOff);
 
-  // ─ Shadow on surface ─
-  const shAlpha = 0.25 + 0.1*(1-liftT);
-  ctx.fillStyle = `rgba(0,0,0,${shAlpha})`;
-  ctx.beginPath();
-  ctx.ellipse(0, h/2+7, w*0.46, 4.5, 0, 0, Math.PI*2);
-  ctx.fill();
-  // secondary diffuse shadow
-  ctx.fillStyle = `rgba(0,0,0,${shAlpha*0.4})`;
-  ctx.beginPath();
-  ctx.ellipse(0, h/2+9, w*0.55, 7, 0, 0, Math.PI*2);
-  ctx.fill();
+  // ── Shadow ──
+  const shA = 0.3 + 0.15*(1-liftT);
+  ctx.fillStyle=`rgba(0,0,0,${shA*0.4})`;
+  ctx.beginPath(); ctx.ellipse(0,h/2+10,w*0.52,6,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=`rgba(0,0,0,${shA})`;
+  ctx.beginPath(); ctx.ellipse(0,h/2+7,w*0.44,4,0,0,Math.PI*2); ctx.fill();
 
   const topY = -h/2 - currentDepth;
 
-  // ─ Housing / switch plate base ─
-  roundRect(-w/2-1, -h/2+1, w+2, h, r+1);
-  ctx.fillStyle = '#151020';
+  // ── Plate (switch housing visible beneath) ──
+  roundRect(-w/2-2, -h/2+2, w+4, h+1, r+2);
+  ctx.fillStyle='#1a1614';
   ctx.fill();
 
-  // ─ Keycap front/side wall ─
-  const wallH = currentDepth + 2;
-  roundRect(-w/2, topY+h-2, w, wallH+2, 4);
+  // ── Side walls ──
+  const wallH = currentDepth + 3;
+  const wallY = topY + h - 1;
 
-  let wallGrad;
-  if(status==='done'){
-    wallGrad = ctx.createLinearGradient(0, topY+h, 0, topY+h+wallH);
-    wallGrad.addColorStop(0, '#5a4d8a');
-    wallGrad.addColorStop(1, '#3d3360');
-  } else if(status==='active'){
-    wallGrad = ctx.createLinearGradient(0, topY+h, 0, topY+h+wallH);
-    wallGrad.addColorStop(0, '#8a6040');
-    wallGrad.addColorStop(1, '#6b4830');
-  } else {
-    wallGrad = ctx.createLinearGradient(0, topY+h, 0, topY+h+wallH);
-    wallGrad.addColorStop(0, '#3a3550');
-    wallGrad.addColorStop(1, '#2a2540');
-  }
-  ctx.fillStyle = wallGrad;
+  // Left wall
+  ctx.beginPath();
+  ctx.moveTo(-w/2, wallY+r); ctx.lineTo(-w/2, wallY+wallH);
+  ctx.arcTo(-w/2, wallY+wallH+3, -w/2+r, wallY+wallH+3, 3);
+  ctx.lineTo(w/2-r, wallY+wallH+3);
+  ctx.arcTo(w/2, wallY+wallH+3, w/2, wallY+wallH, 3);
+  ctx.lineTo(w/2, wallY+r);
+  ctx.closePath();
+  let wGrad = ctx.createLinearGradient(0,wallY,0,wallY+wallH);
+  wGrad.addColorStop(0, pal.wallHi);
+  wGrad.addColorStop(1, pal.wallLo);
+  ctx.fillStyle = wGrad;
   ctx.fill();
 
-  // ─ Top surface (main keycap face) ─
-  roundRect(-w/2, topY, w, h, r);
-
-  let topGrad;
-  if(status==='done'){
-    topGrad = ctx.createLinearGradient(-w/2, topY, w/2, topY+h);
-    topGrad.addColorStop(0, '#7c6db5');
-    topGrad.addColorStop(0.4, '#6b5fa0');
-    topGrad.addColorStop(1, '#5a4f8e');
-  } else if(status==='active'){
-    topGrad = ctx.createLinearGradient(-w/2, topY, w/2, topY+h);
-    topGrad.addColorStop(0, '#d4944a');
-    topGrad.addColorStop(0.5, '#c4843e');
-    topGrad.addColorStop(1, '#b07535');
-  } else {
-    topGrad = ctx.createLinearGradient(0, topY, 0, topY+h);
-    topGrad.addColorStop(0, '#4a4565');
-    topGrad.addColorStop(0.5, '#403b58');
-    topGrad.addColorStop(1, '#37324d');
-  }
-  ctx.fillStyle = topGrad;
-  ctx.fill();
-
-  // ─ Outer rim highlight (top edge catch light) ─
-  ctx.strokeStyle = status==='done' ? 'rgba(180,160,255,0.25)' :
-                    status==='active' ? 'rgba(255,200,120,0.3)' :
-                    'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // ─ Subtle glow for active/done ─
-  if(status==='active'){
-    ctx.shadowBlur = 14;
-    ctx.shadowColor = 'rgba(245,166,35,0.35)';
-    ctx.strokeStyle = 'rgba(245,166,35,0.2)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  } else if(status==='done'){
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'rgba(180,142,255,0.25)';
-    ctx.strokeStyle = 'rgba(180,142,255,0.15)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  }
-
-  // ─ Inner concave dish ─
-  // A slightly inset rectangle to simulate the scooped top surface
-  const dishPad = 4;
-  roundRect(-w/2+dishPad, topY+dishPad, w-dishPad*2, h-dishPad*2, r-2);
-  const dishGrad = ctx.createLinearGradient(0, topY+dishPad, 0, topY+h-dishPad);
-  if(status==='done'){
-    dishGrad.addColorStop(0, 'rgba(0,0,0,0.12)');
-    dishGrad.addColorStop(0.4, 'rgba(0,0,0,0.02)');
-    dishGrad.addColorStop(1, 'rgba(255,255,255,0.04)');
-  } else if(status==='active'){
-    dishGrad.addColorStop(0, 'rgba(0,0,0,0.15)');
-    dishGrad.addColorStop(0.4, 'rgba(0,0,0,0.03)');
-    dishGrad.addColorStop(1, 'rgba(255,255,255,0.06)');
-  } else {
-    dishGrad.addColorStop(0, 'rgba(0,0,0,0.12)');
-    dishGrad.addColorStop(0.5, 'rgba(0,0,0,0.03)');
-    dishGrad.addColorStop(1, 'rgba(255,255,255,0.03)');
-  }
-  ctx.fillStyle = dishGrad;
-  ctx.fill();
-
-  // ─ Top edge gloss (specular highlight at very top) ─
+  // Wall left edge highlight
   ctx.save();
-  roundRect(-w/2+2, topY+1.5, w-4, Math.max(3,h*0.28), 5);
+  ctx.beginPath();
+  ctx.rect(-w/2, wallY, 3, wallH);
   ctx.clip();
-  const glossA = status==='active' ? 0.14 : 0.07;
-  ctx.fillStyle = `rgba(255,255,255,${glossA})`;
-  ctx.fillRect(-w/2, topY, w, h*0.28);
+  ctx.fillStyle='rgba(255,255,255,0.06)';
+  ctx.fillRect(-w/2,wallY,3,wallH);
   ctx.restore();
 
-  // ─ Wrong flash ─
-  if(wrongFlash > 0.02){
-    roundRect(-w/2, topY, w, h, r);
-    ctx.fillStyle = `rgba(255,71,87,${wrongFlash*0.35})`;
-    ctx.fill();
-    ctx.strokeStyle = `rgba(255,71,87,${wrongFlash*0.7})`;
-    ctx.lineWidth = 2;
+  // Wall right edge shadow
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(w/2-3, wallY, 3, wallH);
+  ctx.clip();
+  ctx.fillStyle='rgba(0,0,0,0.08)';
+  ctx.fillRect(w/2-3,wallY,3,wallH);
+  ctx.restore();
+
+  // ── Top face ──
+  roundRect(-w/2, topY, w, h, r);
+  let tGrad = ctx.createLinearGradient(-w/2, topY, w/2, topY+h);
+  tGrad.addColorStop(0, pal.topHi);
+  tGrad.addColorStop(0.5, pal.topHi);
+  tGrad.addColorStop(1, pal.topLo);
+  ctx.fillStyle = tGrad;
+  ctx.fill();
+
+  // ── Outer rim ──
+  ctx.strokeStyle='rgba(255,255,255,0.08)';
+  ctx.lineWidth=0.5;
+  ctx.stroke();
+
+  // ── Glow (active only) ──
+  if(pal.glow){
+    ctx.shadowBlur=16;
+    ctx.shadowColor=pal.glow;
+    roundRect(-w/2,topY,w,h,r);
+    ctx.strokeStyle=pal.glow;
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+    ctx.shadowBlur=0;
+  }
+
+  // ── Sketch / manga lines on surface ──
+  ctx.save();
+  roundRect(-w/2+1, topY+1, w-2, h-2, r-1);
+  ctx.clip();
+
+  const rng = mulberry32(seed);
+  ctx.strokeStyle = pal.sketchColor;
+  ctx.lineWidth = 0.8;
+
+  // Diagonal hatching lines (manga cross-hatch feel)
+  for(let i=0; i<8; i++){
+    const x1 = -w/2 + rng()*w;
+    const y1 = topY + rng()*h;
+    const len = 8 + rng()*18;
+    const ang = -0.6 + rng()*0.4; // mostly diagonal
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 + Math.cos(ang)*len, y1 + Math.sin(ang)*len);
+    ctx.stroke();
+  }
+  // A few curved sketch strokes
+  for(let i=0; i<3; i++){
+    const x1 = -w/2 + rng()*w*0.8;
+    const y1 = topY + h*0.3 + rng()*h*0.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(
+      x1 + rng()*15 - 5, y1 + rng()*12 - 6,
+      x1 + 10 + rng()*12, y1 + rng()*8 - 4
+    );
+    ctx.stroke();
+  }
+  // Edge darkening strokes (like manga shadow lines at edges)
+  ctx.strokeStyle = pal.sketchColor;
+  ctx.lineWidth = 1.2;
+  // bottom edge strokes
+  for(let i=0; i<4; i++){
+    const x1 = -w/2+4 + rng()*(w-8);
+    const y1 = topY + h - 5 - rng()*6;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 + 6 + rng()*10, y1 + 2 + rng()*3);
+    ctx.stroke();
+  }
+  // right edge strokes
+  for(let i=0; i<3; i++){
+    const x1 = w/2 - 6 - rng()*5;
+    const y1 = topY + 6 + rng()*(h-12);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 + 2 + rng()*3, y1 + 5 + rng()*8);
     ctx.stroke();
   }
 
-  // ─ Letter legend ─
-  // Slightly embossed look: dark shadow under, light letter on top
+  ctx.restore();
+
+  // ── Concave dish (inner shadow) ──
+  const dp = 4;
+  roundRect(-w/2+dp, topY+dp, w-dp*2, h-dp*2, r-2);
+  let dGrad = ctx.createLinearGradient(0,topY+dp,0,topY+h-dp);
+  dGrad.addColorStop(0, pal.dishShadow);
+  dGrad.addColorStop(0.35, 'rgba(0,0,0,0.01)');
+  dGrad.addColorStop(1, 'rgba(255,255,255,0.03)');
+  ctx.fillStyle = dGrad;
+  ctx.fill();
+
+  // ── Top edge gloss ──
+  ctx.save();
+  roundRect(-w/2+2, topY+1, w-4, Math.max(3, h*0.25), 4);
+  ctx.clip();
+  ctx.fillStyle = `rgba(255,255,255,${status==='active'?0.15:0.08})`;
+  ctx.fillRect(-w/2, topY, w, h*0.25);
+  ctx.restore();
+
+  // ── Bottom edge subtle line ──
+  ctx.save();
+  roundRect(-w/2+3, topY+h-4, w-6, 3, 2);
+  ctx.clip();
+  ctx.fillStyle = 'rgba(0,0,0,0.05)';
+  ctx.fillRect(-w/2, topY+h-4, w, 3);
+  ctx.restore();
+
+  // ── Wrong flash ──
+  if(wrongFlash>0.02){
+    roundRect(-w/2, topY, w, h, r);
+    ctx.fillStyle=`rgba(196,92,74,${wrongFlash*0.3})`;
+    ctx.fill();
+    ctx.strokeStyle=`rgba(196,92,74,${wrongFlash*0.6})`;
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
+
+  // ── Legend (letter) ──
   const fontSize = Math.round(h*0.36);
-  ctx.font = `700 ${fontSize}px 'Inter', sans-serif`;
+  ctx.font = `800 ${fontSize}px 'Inter', sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const labelY = topY + h/2 + 1;
+  const lY = topY + h/2 + 1;
 
-  // Shadow (emboss bottom)
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillText(label, 0.5, labelY+1);
+  // Emboss shadow
+  ctx.fillStyle = pal.legendShadow;
+  ctx.fillText(label, 0.5, lY+1.2);
 
   // Main letter
-  if(status==='done'){
-    ctx.fillStyle = '#e0d8f8';
-    ctx.shadowColor = 'rgba(180,142,255,0.3)';
-    ctx.shadowBlur = 4;
-  } else if(status==='active'){
-    ctx.fillStyle = '#fff8ee';
-    ctx.shadowColor = 'rgba(245,166,35,0.4)';
-    ctx.shadowBlur = 6;
-  } else {
-    ctx.fillStyle = 'rgba(200,195,220,0.5)';
+  ctx.fillStyle = pal.legend;
+  if(status==='active'){
+    ctx.shadowColor='rgba(255,240,200,0.3)';
+    ctx.shadowBlur=4;
   }
-  ctx.fillText(label, 0, labelY);
+  ctx.fillText(label, 0, lY);
 
   ctx.restore();
 }
 
-// ── Draw Word ──
+/* ── Draw active word ── */
 function drawWord(now, dt){
   if(!word) return;
   const c = wordCenter();
   word.enter = Math.min(1, word.enter + dt*3.5);
-  const easeT = easeOutBack(word.enter);
-  const enterScale = 0.65 + 0.35*easeT;
-  const enterAlpha = word.enter;
+  const eT = easeOutBack(word.enter);
+  const scale = 0.7+0.3*eT;
 
   ctx.save();
-  ctx.globalAlpha = enterAlpha;
-  ctx.translate(c.x, c.y);
-  ctx.scale(enterScale, enterScale);
-  ctx.translate(-c.x, -c.y);
+  ctx.globalAlpha = word.enter;
+  ctx.translate(c.x,c.y);
+  ctx.scale(scale,scale);
+  ctx.translate(-c.x,-c.y);
 
-  // Warm ambient glow
-  const grd = ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,180);
-  grd.addColorStop(0,'rgba(245,166,35,0.06)');
-  grd.addColorStop(0.5,'rgba(180,142,255,0.03)');
+  // Soft warm light under keys
+  const grd=ctx.createRadialGradient(c.x,c.y+10,0,c.x,c.y+10,160);
+  grd.addColorStop(0,'rgba(212,168,85,0.06)');
   grd.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle = grd;
-  ctx.beginPath(); ctx.arc(c.x,c.y,180,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=grd;
+  ctx.beginPath();ctx.arc(c.x,c.y+10,160,0,Math.PI*2);ctx.fill();
 
-  const boxW=52, gap=10, boxH=52;
-  const totalW = word.letters.length*boxW+(word.letters.length-1)*gap;
-  const startX = c.x - totalW/2;
+  const boxW=56, gap=12, boxH=52;
+  const totalW=word.letters.length*boxW+(word.letters.length-1)*gap;
+  const startX=c.x-totalW/2;
 
-  // Progress bar
-  const elapsed = (now-word.spawnedAt)*state.tempo;
-  const remaining = Math.max(0, 1-elapsed/word.duration);
-  const barY = c.y+48;
-  const barH = 4;
+  // ── Keyboard case/plate beneath keys ──
+  const caseR = 14;
+  const casePad = 18;
+  const caseX = startX - casePad;
+  const caseY = c.y - boxH/2 - 10 - casePad + 4;
+  const caseW = totalW + casePad*2;
+  const caseH = boxH + 10 + casePad*2 + 20;
 
-  roundRect(startX, barY, totalW, barH, 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  // Case shadow
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  roundRect(caseX+3, caseY+5, caseW, caseH, caseR+2);
   ctx.fill();
 
-  if(totalW*remaining>0){
-    roundRect(startX, barY, totalW*remaining, barH, 2);
+  // Main case body (cream white like in the photo)
+  roundRect(caseX, caseY, caseW, caseH, caseR);
+  let caseGrad = ctx.createLinearGradient(caseX, caseY, caseX, caseY+caseH);
+  caseGrad.addColorStop(0, '#e8e2d8');
+  caseGrad.addColorStop(0.3, '#ddd6ca');
+  caseGrad.addColorStop(1, '#d0c8ba');
+  ctx.fillStyle = caseGrad;
+  ctx.fill();
+
+  // Case border
+  ctx.strokeStyle='rgba(0,0,0,0.08)';
+  ctx.lineWidth=1;
+  ctx.stroke();
+
+  // Case inner shadow (where keys sit)
+  const innerPad = 10;
+  roundRect(caseX+innerPad, caseY+innerPad, caseW-innerPad*2, caseH-innerPad*2-12, 8);
+  ctx.fillStyle='#2a2420';
+  ctx.fill();
+
+  // Inner plate subtle border
+  ctx.strokeStyle='rgba(0,0,0,0.15)';
+  ctx.lineWidth=0.5;
+  ctx.stroke();
+
+  // ── Wood base beneath case ──
+  const woodH = 14;
+  const woodY = caseY + caseH - 4;
+  roundRect(caseX+6, woodY, caseW-12, woodH, 4);
+  let woodGrad = ctx.createLinearGradient(0,woodY,0,woodY+woodH);
+  woodGrad.addColorStop(0,'#6b5440');
+  woodGrad.addColorStop(0.5,'#5a4535');
+  woodGrad.addColorStop(1,'#4a3828');
+  ctx.fillStyle = woodGrad;
+  ctx.fill();
+
+  // Wood grain lines
+  ctx.save();
+  roundRect(caseX+6, woodY, caseW-12, woodH, 4);
+  ctx.clip();
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.lineWidth=0.5;
+  for(let i=0;i<8;i++){
+    const gy = woodY+2+Math.random()*(woodH-4);
+    ctx.beginPath();ctx.moveTo(caseX+10,gy);
+    ctx.lineTo(caseX+caseW-10,gy+(Math.random()-0.5)*3);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── Progress bar (inside case, below keys) ──
+  const elapsed=(now-word.spawnedAt)*state.tempo;
+  const remaining=Math.max(0,1-elapsed/word.duration);
+  const barY=c.y+boxH/2+14;
+  const barW=totalW;
+  const barH=4;
+
+  roundRect(startX, barY, barW, barH, 2);
+  ctx.fillStyle='rgba(0,0,0,0.3)';
+  ctx.fill();
+
+  if(barW*remaining>0){
+    roundRect(startX, barY, barW*remaining, barH, 2);
     if(remaining<0.25){
-      ctx.fillStyle='rgba(255,71,87,0.7)';
+      ctx.fillStyle='#c45c4a';
     } else {
-      const bg=ctx.createLinearGradient(startX,0,startX+totalW,0);
-      bg.addColorStop(0,'#f5a623');
-      bg.addColorStop(0.5,'#e8668a');
-      bg.addColorStop(1,'#b48eff');
+      const bg=ctx.createLinearGradient(startX,0,startX+barW,0);
+      bg.addColorStop(0,'#d4a855');
+      bg.addColorStop(1,'#c48a30');
       ctx.fillStyle=bg;
     }
     ctx.fill();
-    ctx.shadowBlur=6;
-    ctx.shadowColor=remaining<0.25?'rgba(255,71,87,0.4)':'rgba(245,166,35,0.3)';
+    ctx.shadowBlur=4;
+    ctx.shadowColor=remaining<0.25?'rgba(196,92,74,0.4)':'rgba(212,168,85,0.3)';
     ctx.fill();
     ctx.shadowBlur=0;
   }
 
-  // Draw keycaps
+  // ── Keycaps ──
   word.letters.forEach((letter,i)=>{
     const bx = startX + i*(boxW+gap) + boxW/2;
     const box = word.boxes[i];
-    box.wf = Math.max(0, box.wf - dt*3);
-    box.pf = Math.max(0, box.pf - dt*5);
-    box.bounce = Math.max(0, box.bounce - dt*4);
+    box.wf = Math.max(0, box.wf-dt*3);
+    box.pf = Math.max(0, box.pf-dt*5);
+    box.bounce = Math.max(0, box.bounce-dt*4);
 
     let status='waiting', liftT=0;
-    if(i<word.index){ status='done'; liftT=0; }
-    else if(i===word.index){ status='active'; liftT=0.15; }
+    if(i<word.index){status='done';liftT=0;}
+    else if(i===word.index){status='active';liftT=0.15;}
     if(i===word.index-1) liftT=Math.max(liftT,box.pf);
 
-    drawKeycap(bx, c.y, boxW, boxH, letter, status, liftT, box.wf, box.bounce);
+    drawKeycap(bx, c.y, boxW, boxH, letter, status, liftT, box.wf, box.bounce, box.seed);
   });
 
   ctx.restore();
 }
 
 function easeOutBack(t){
-  const c1=1.70158, c3=c1+1;
+  const c1=1.70158,c3=c1+1;
   return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);
 }
 
-// ── Soft grid ──
-function drawGrid(){
+/* ── Background ── */
+// Warm dark surface with subtle texture
+function drawBackground(now){
+  // Base gradient
+  const bg=ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*0.7);
+  bg.addColorStop(0,'#352e28');
+  bg.addColorStop(0.6,'#2c2420');
+  bg.addColorStop(1,'#221c18');
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,W,H);
+
+  // Subtle fabric/felt texture (noise-like pattern)
   ctx.save();
-  ctx.strokeStyle='rgba(255,255,255,0.012)';
-  ctx.lineWidth=1;
-  const step=48;
-  for(let x=0;x<W;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<H;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.globalAlpha=0.03;
+  const step=6;
+  for(let y=0;y<H;y+=step){
+    for(let x=0;x<W;x+=step){
+      const v = Math.sin(x*0.1+y*0.15)*0.5+0.5;
+      ctx.fillStyle = v>0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
+      ctx.fillRect(x,y,step,step);
+    }
+  }
   ctx.restore();
+
+  // Warm light cone from above (desk lamp feel)
+  const lamp=ctx.createRadialGradient(CX,CY-100,0,CX,CY-100,350);
+  lamp.addColorStop(0,'rgba(212,168,85,0.04)');
+  lamp.addColorStop(0.5,'rgba(180,140,80,0.02)');
+  lamp.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=lamp;
+  ctx.beginPath();ctx.arc(CX,CY-100,350,0,Math.PI*2);ctx.fill();
 }
 
 function drawGlitch(dt){
   if(state.glitch>0){
     ctx.save();
-    ctx.fillStyle=`rgba(255,71,87,${state.glitch*0.06})`;
+    ctx.fillStyle=`rgba(196,92,74,${state.glitch*0.06})`;
     ctx.fillRect(0,0,W,H);
     ctx.restore();
     state.glitch=Math.max(0,state.glitch-dt*2);
   }
 }
-
 function updateShake(dt){
   if(state.shake>0){
-    state.sx=(Math.random()-0.5)*state.shake*10;
-    state.sy=(Math.random()-0.5)*state.shake*10;
+    state.sx=(Math.random()-0.5)*state.shake*8;
+    state.sy=(Math.random()-0.5)*state.shake*8;
     state.shake=Math.max(0,state.shake-dt*3);
-  } else { state.sx=0; state.sy=0; }
+  } else { state.sx=0;state.sy=0; }
 }
 
-// ── Main Loop ──
+/* ── Main Loop ── */
 let lastT=performance.now();
-initParticles();
-initOrbs();
-
 function loop(now){
   const dt=Math.min(0.05,(now-lastT)/1000);
   lastT=now;
@@ -781,36 +766,23 @@ function loop(now){
 
   if(!frozen){
     state.tempo+=(state.targetTempo-state.tempo)*dt*1.5;
-    if(!word && now>=nextSpawnAt) spawnWord();
+    if(!word&&now>=nextSpawnAt) spawnWord();
     if(word){
       const elapsed=(now-word.spawnedAt)*state.tempo;
       if(elapsed>=word.duration) missWord('sure doldu');
     }
   }
-
   updateShake(dt);
 
   ctx.save();
-  ctx.translate(state.sx, state.sy);
+  ctx.translate(state.sx,state.sy);
 
-  // Background
-  const bg=ctx.createLinearGradient(0,0,W,H);
-  bg.addColorStop(0,'#1a1025');
-  bg.addColorStop(0.4,'#2a1f3d');
-  bg.addColorStop(1,'#1e1535');
-  ctx.fillStyle=bg;
-  ctx.fillRect(-10,-10,W+20,H+20);
-
-  drawOrbs(now);
-  drawGrid();
-  drawParticles(dt);
-  drawWord(now, frozen?0:dt);
-  drawSparkles(dt);
-  drawConfetti(dt);
+  drawBackground(now);
+  drawWord(now,frozen?0:dt);
+  drawBursts(dt);
   drawGlitch(dt);
 
   ctx.restore();
-
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
