@@ -106,10 +106,40 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let W, H, CX, CY;
 
+let bgCanvas = null;
+function createBackgroundCache() {
+  bgCanvas = document.createElement('canvas');
+  bgCanvas.width = W;
+  bgCanvas.height = H;
+  const bctx = bgCanvas.getContext('2d');
+
+  // Base gradient
+  const bg=bctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*0.7);
+  bg.addColorStop(0,'#352e28');
+  bg.addColorStop(0.6,'#2c2420');
+  bg.addColorStop(1,'#221c18');
+  bctx.fillStyle=bg;
+  bctx.fillRect(0,0,W,H);
+
+  // Subtle fabric/felt texture (noise-like pattern)
+  bctx.save();
+  bctx.globalAlpha=0.03;
+  const step=6;
+  for(let y=0;y<H;y+=step){
+    for(let x=0;x<W;x+=step){
+      const v = Math.sin(x*0.1+y*0.15)*0.5+0.5;
+      bctx.fillStyle = v>0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
+      bctx.fillRect(x,y,step,step);
+    }
+  }
+  bctx.restore();
+}
+
 function resize(){
   W = canvas.width = window.innerWidth;
   H = canvas.height = window.innerHeight;
   CX = W/2; CY = H/2;
+  if(W > 0 && H > 0) createBackgroundCache();
 }
 window.addEventListener('resize', resize);
 resize();
@@ -710,26 +740,12 @@ function easeOutBack(t){
 /* ── Background ── */
 // Warm dark surface with subtle texture
 function drawBackground(now){
-  // Base gradient
-  const bg=ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*0.7);
-  bg.addColorStop(0,'#352e28');
-  bg.addColorStop(0.6,'#2c2420');
-  bg.addColorStop(1,'#221c18');
-  ctx.fillStyle=bg;
-  ctx.fillRect(0,0,W,H);
-
-  // Subtle fabric/felt texture (noise-like pattern)
-  ctx.save();
-  ctx.globalAlpha=0.03;
-  const step=6;
-  for(let y=0;y<H;y+=step){
-    for(let x=0;x<W;x+=step){
-      const v = Math.sin(x*0.1+y*0.15)*0.5+0.5;
-      ctx.fillStyle = v>0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
-      ctx.fillRect(x,y,step,step);
-    }
+  if (bgCanvas) {
+    ctx.drawImage(bgCanvas, 0, 0);
+  } else {
+    ctx.fillStyle = '#2c2420';
+    ctx.fillRect(0, 0, W, H);
   }
-  ctx.restore();
 
   // Warm light cone from above (desk lamp feel)
   const lamp=ctx.createRadialGradient(CX,CY-100,0,CX,CY-100,350);
