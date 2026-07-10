@@ -854,6 +854,84 @@ function updateShake(dt){
   } else { state.sx=0;state.sy=0; }
 }
 
+/* ── Falling Background Words ── */
+const fallingWords = [];
+
+function spawnFallingWord() {
+  const raw = WORD_POOL[Math.floor(Math.random()*WORD_POOL.length)];
+  const letters = raw.split('');
+  
+  let x, y;
+  if (Math.random() > 0.5) {
+    x = -200;
+    y = Math.random() * H * 0.8 - 100;
+  } else {
+    x = Math.random() * W * 0.8 - 100;
+    y = -200;
+  }
+  
+  const scale = 0.3 + Math.random() * 0.4;
+  const speed = 70 + Math.random() * 90;
+  const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.3;
+
+  fallingWords.push({
+    letters,
+    x, y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    scale,
+    alpha: 0.08 + Math.random() * 0.15,
+    boxes: letters.map((_, i) => {
+      const seed = Math.floor(Math.random()*99999+i*100);
+      return {
+        sketchPath: generateSketchPath(56, 52, seed),
+        edgePath: generateEdgePath(56, 52, seed)
+      };
+    })
+  });
+}
+
+function updateAndDrawFallingWords(dt) {
+  if (gameState === 'MENU' && Math.random() < dt * 2.5) {
+     if (fallingWords.length < 14) spawnFallingWord();
+  }
+
+  for (let i = fallingWords.length - 1; i >= 0; i--) {
+    const fw = fallingWords[i];
+    fw.x += fw.vx * dt;
+    fw.y += fw.vy * dt;
+
+    if (fw.x > W + 300 || fw.y > H + 300) {
+      fallingWords.splice(i, 1);
+      continue;
+    }
+
+    if (gameState === 'PLAYING') {
+      fw.alpha -= dt * 0.4;
+      if (fw.alpha <= 0) {
+        fallingWords.splice(i, 1);
+        continue;
+      }
+    }
+
+    ctx.save();
+    ctx.globalAlpha = fw.alpha;
+    ctx.translate(fw.x, fw.y);
+    ctx.scale(fw.scale, fw.scale);
+    ctx.translate(0, Math.sin(performance.now()/600 + fw.x*0.01) * 12);
+
+    const boxW = 56, gap = 12, boxH = 52;
+    const totalW = fw.letters.length * boxW + (fw.letters.length - 1) * gap;
+    const startX = -totalW / 2;
+
+    for (let j = 0; j < fw.letters.length; j++) {
+      const bx = startX + j * (boxW + gap) + boxW / 2;
+      drawKeycap(bx, 0, boxW, boxH, fw.letters[j], 'waiting', 0, 0, 0, fw.boxes[j]);
+    }
+    ctx.restore();
+  }
+}
+
 /* ── Main Loop ── */
 let lastT=performance.now();
 function loop(now){
@@ -879,6 +957,7 @@ function loop(now){
   ctx.translate(state.sx,state.sy);
 
   drawBackground(now);
+  updateAndDrawFallingWords(dt);
   drawWord(now,frozen?0:dt);
   drawBursts(dt);
   drawGlitch(dt);
