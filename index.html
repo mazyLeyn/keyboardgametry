@@ -514,7 +514,7 @@ window.addEventListener('keydown',(e)=>{
     return;
   }
 
-  if(!word||performance.now()<state.frozenUntil || gameState !== 'PLAYING') return;
+  if(!word||performance.now()<state.frozenUntil) return;
 
   const expected=word.letters[word.index];
   if(key===expected){
