@@ -11,7 +11,7 @@
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{
     height:100%; overflow:hidden;
-    font-family:'Inter', system-ui, sans-serif; 
+    font-family:'Inter', system-ui, sans-serif;
     -webkit-font-smoothing:antialiased;
   }
   body{ background:#2c2420; }
@@ -292,9 +292,10 @@ const state = {
 
 /* ── Words ── */
 const WORD_POOL = [
-  'SES','YOL','ANI','TON','GÜÇ','HIZ','KAÇ','TUŞ','SIR','AŞK','GÖZ','KOL','ISI','ZİL','TAŞ','KUM','SAZ',
-  'ATEŞ','IŞIK','ODAK','AKIŞ','NOTA','RÜYA','PEÇE','TREN','KAPI','ÇARK','UYUM','DOKU','SIRT','İVME','DOLU','KATI','SIVI','AĞIR',
-  'RİTİM','DENGE','ZAMAN','NABIZ','GÜNEŞ','BULUT','ÇEVİK','TEMPO','NEFES','YÜZEY','DALGA','DUMAN','GÖLGE','KİLİT','DÜĞÜM','ÇİZGİ','PARÇA','AKORT','EKRAN','KABLO','DÜZEN','ANLAM','YANKI','DÖNGÜ','HAFİF','VURUŞ'
+  'SES','YOL','ANI','TON','GÜÇ','HIZ','KAÇ','TUŞ','SIR','AŞK','GÖZ','KOL','ISI','ZİL','TAŞ','KUM','SAZ','KOD','BAĞ','ÇİP','FON','HİS','KAN','KAS','KÖK','NOT','OKU','PİL','RUH','SAF','YAZ','ZOR',
+  'ATEŞ','IŞIK','ODAK','AKIŞ','NOTA','RÜYA','TREN','KAPI','ÇARK','UYUM','DOKU','SIRT','İVME','DOLU','KATI','SIVI','AĞIR','AKIM','ALAN','ARAÇ','BANT','BLOK','DATA','ESER','FORM','HARF','HATA','KARE','KASA','KLAN','KURS','LİNK','MOLA','NORM','ONAY','OYUN','ÖYKÜ','PLAN','PUAN','RİSK','SAYI','SKOR','TEST','VERİ','YAPI',
+  'RİTİM','DENGE','ZAMAN','NABIZ','GÜNEŞ','BULUT','ÇEVİK','TEMPO','NEFES','YÜZEY','DALGA','DUMAN','GÖLGE','KİLİT','DÜĞÜM','ÇİZGİ','PARÇA','AKORT','EKRAN','KABLO','DÜZEN','ANLAM','YANKI','DÖNGÜ','HAFİF','VURUŞ','AHENK','AKTİF','ARŞİV','BİÇİM','CEVAP','CİHAZ','ÇÖZÜM','DEĞER','DETAY','DİKEY','DOĞRU','DOSYA','EFEKT','FİKİR','FOKUS','GİRİŞ','GÖRÜŞ','GURUR','HACİM','HEDEF','HESAP','HÜCRE','İŞLEM','KAYIT','KURAL','MANTIK','METİN','MÜZİK','NESNE','ORTAM','PANEL','PROJE','ROBOT','SANAT','SINIR','SİLAH','TABLO','TEMA','TEORİ','UZMAN','ÜNİTE','VİDEO','YATAY','YAYIN','YORUM','ZEMİN',
+  'BAŞARI','BELLEK','BOŞLUK','DİKKAT','EFSANE','ENERJİ','KLAVYE','KUVVET','MİKTAR','SİSTEM','SÜRÜCÜ','ŞİDDET','YAZILIM','GELİŞİM','BİLİŞİM','TEKNİK','GÜNCEL','SÖZCÜK','YÖNTEM','HAREKET','AŞAĞI','YUKARI','SESSİZ','GÖRÜNTÜ'
 ];
 const MS_PER_LETTER = 620;
 let word = null;
