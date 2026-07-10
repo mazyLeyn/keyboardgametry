@@ -94,7 +94,7 @@
   /* Main Menu UI */
   #menu-ui{
     position:absolute; top:25%; left:0; right:0;
-    text-align:center; pointer-events:none; z-index:20;
+    text-align:center; pointer-events:auto; z-index:20;
     transition: opacity 0.4s ease, transform 0.4s ease;
   }
   #menu-ui h1 {
@@ -172,7 +172,9 @@
     background: rgba(255,255,255,0.05); padding: 15px 25px; border-radius: 8px;
     color: rgba(210,195,180,0.8); font-family: 'JetBrains Mono', monospace; font-size: 14px;
     border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; transition: background 0.2s;
   }
+  .setting-item:hover { background: rgba(255,255,255,0.15); }
   .setting-item .key { 
     display: inline-block; background: #d4a855; color: #1a1614; font-weight: 800;
     padding: 6px 12px; border-radius: 6px; box-shadow: 0 4px 0 #b0a898; margin-right: 15px;
@@ -199,7 +201,7 @@
   <div id="menu-ui">
     <h1>KEYBOUND</h1>
     <p>BAŞLAMAK İÇİN YAZ</p>
-    <p style="margin-top:20px; font-size:12px; color:rgba(210,195,180,0.4); letter-spacing:2px;">AYARLAR İÇİN <span style="color:#d4a855; font-weight:bold;">TAB</span> BAS</p>
+    <p id="btn-settings" onclick="openSettings()" style="margin-top:20px; font-size:14px; color:rgba(210,195,180,0.6); letter-spacing:4px; cursor:pointer; display:inline-block; padding:10px; transition:color 0.2s;">[ AYARLAR ]</p>
   </div>
   <div id="mode-select-ui">
     <div class="mode-card">
@@ -228,20 +230,20 @@
   <div id="settings-ui">
     <h2>AYARLAR</h2>
     <div class="settings-list">
-      <div class="setting-item">
+      <div class="setting-item" onclick="toggleSetting('switch')">
         <div><span class="key">1</span> SWITCH TİPİ</div>
         <span class="val" id="val-switch">BLUE (CLİCKY)</span>
       </div>
-      <div class="setting-item">
+      <div class="setting-item" onclick="toggleSetting('shake')">
         <div><span class="key">2</span> EKRAN SARSINTISI</div>
         <span class="val" id="val-shake">AÇIK</span>
       </div>
-      <div class="setting-item">
+      <div class="setting-item" onclick="toggleSetting('crt')">
         <div><span class="key">3</span> CRT FİLTRESİ</div>
         <span class="val" id="val-crt">KAPALI</span>
       </div>
     </div>
-    <p style="margin-top:40px; color:#d4a855; font-size:12px; letter-spacing:2px;">MENÜYE DÖNMEK İÇİN <span style="color:#fff; font-weight:800; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">ESC</span> BAS</p>
+    <p style="margin-top:40px; color:#d4a855; font-size:12px; letter-spacing:2px; cursor:pointer;" onclick="closeSettings()">MENÜYE DÖNMEK İÇİN <span style="color:#fff; font-weight:800; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">ESC</span> BAS</p>
   </div>
   <div id="hud">
     <div class="hud-box"><span class="label">TEMPO</span><span class="value" id="tempo">100%</span></div>
@@ -407,6 +409,37 @@ function updateSettingsUI() {
   
   if (userSettings.crtEnabled) document.body.classList.add('crt-on');
   else document.body.classList.remove('crt-on');
+}
+
+function openSettings() {
+  if (gameState !== 'MENU') return;
+  gameState = 'SETTINGS';
+  document.body.classList.add('settings-active');
+  document.getElementById('menu-ui').style.opacity = '0';
+  document.getElementById('menu-ui').style.pointerEvents = 'none';
+  updateSettingsUI();
+}
+
+function closeSettings() {
+  if (gameState !== 'SETTINGS') return;
+  gameState = 'MENU';
+  document.body.classList.remove('settings-active');
+  document.getElementById('menu-ui').style.opacity = '1';
+  document.getElementById('menu-ui').style.pointerEvents = 'auto';
+}
+
+function toggleSetting(id) {
+  if (gameState !== 'SETTINGS') return;
+  if (id === 'switch') {
+    userSettings.switchType = (userSettings.switchType + 1) % 3;
+    keyClack('hit');
+  } else if (id === 'shake') {
+    userSettings.shakeEnabled = !userSettings.shakeEnabled;
+    if (userSettings.shakeEnabled) state.shake = 0.2;
+  } else if (id === 'crt') {
+    userSettings.crtEnabled = !userSettings.crtEnabled;
+  }
+  updateSettingsUI();
 }
 
 const state = {
@@ -577,13 +610,7 @@ function gameOver(reason) {
 window.addEventListener('keydown',(e)=>{
   if (e.key === 'Tab') {
     e.preventDefault();
-    if (gameState === 'MENU') {
-      gameState = 'SETTINGS';
-      document.body.classList.add('settings-active');
-      document.getElementById('menu-ui').style.opacity = '0';
-      updateSettingsUI();
-      return;
-    }
+    openSettings();
   }
 
   if (e.key === 'Escape') {
@@ -606,22 +633,10 @@ window.addEventListener('keydown',(e)=>{
   const key=e.key.toLocaleUpperCase('tr-TR');
 
   if (gameState === 'SETTINGS') {
-    if (e.key === '1') {
-      userSettings.switchType = (userSettings.switchType + 1) % 3;
-      updateSettingsUI();
-      keyClack('hit');
-    } else if (e.key === '2') {
-      userSettings.shakeEnabled = !userSettings.shakeEnabled;
-      updateSettingsUI();
-      if (userSettings.shakeEnabled) { state.shake = 0.2; }
-    } else if (e.key === '3') {
-      userSettings.crtEnabled = !userSettings.crtEnabled;
-      updateSettingsUI();
-    } else if (e.key === 'Escape') {
-      gameState = 'MENU';
-      document.body.classList.remove('settings-active');
-      document.getElementById('menu-ui').style.opacity = '1';
-    }
+    if (e.key === '1') toggleSetting('switch');
+    else if (e.key === '2') toggleSetting('shake');
+    else if (e.key === '3') toggleSetting('crt');
+    else if (e.key === 'Escape') closeSettings();
     return;
   }
 
@@ -631,9 +646,11 @@ window.addEventListener('keydown',(e)=>{
       document.body.classList.remove('paused');
       document.body.classList.remove('playing');
       document.getElementById('menu-ui').style.opacity = '1';
+      document.getElementById('menu-ui').style.pointerEvents = 'auto';
       document.getElementById('menu-ui').innerHTML = `
         <h1>KEYBOUND</h1>
         <p>BAŞLAMAK İÇİN YAZ</p>
+        <p id="btn-settings" onclick="openSettings()" style="margin-top:20px; font-size:14px; color:rgba(210,195,180,0.6); letter-spacing:4px; cursor:pointer; display:inline-block; padding:10px; transition:color 0.2s;">[ AYARLAR ]</p>
       `;
       spawnMenuWord();
     }
@@ -651,9 +668,12 @@ window.addEventListener('keydown',(e)=>{
     if (e.code === 'Space') {
       gameState = 'MENU';
       document.body.classList.remove('game-over');
+      document.getElementById('menu-ui').style.opacity = '1';
+      document.getElementById('menu-ui').style.pointerEvents = 'auto';
       document.getElementById('menu-ui').innerHTML = `
         <h1>KEYBOUND</h1>
         <p>BAŞLAMAK İÇİN YAZ</p>
+        <p id="btn-settings" onclick="openSettings()" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(210,195,180,0.6)'" style="margin-top:20px; font-size:14px; color:rgba(210,195,180,0.6); letter-spacing:4px; cursor:pointer; display:inline-block; padding:10px; transition:color 0.2s;">[ AYARLAR ]</p>
       `;
       spawnMenuWord();
     }
