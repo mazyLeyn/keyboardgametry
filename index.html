@@ -154,6 +154,44 @@ function mulberry32(a){
   };
 }
 
+function generateSketchPath(w, h, seed) {
+  const rng = mulberry32(seed);
+  const path = new Path2D();
+  for(let i=0; i<8; i++){
+    const x1 = rng()*w;
+    const y1 = rng()*h;
+    const len = 8 + rng()*18;
+    const ang = -0.6 + rng()*0.4;
+    path.moveTo(x1, y1);
+    path.lineTo(x1 + Math.cos(ang)*len, y1 + Math.sin(ang)*len);
+  }
+  for(let i=0; i<3; i++){
+    const x1 = rng()*w*0.8;
+    const y1 = h*0.3 + rng()*h*0.5;
+    path.moveTo(x1, y1);
+    path.quadraticCurveTo(x1 + rng()*15 - 5, y1 + rng()*12 - 6, x1 + 10 + rng()*12, y1 + rng()*8 - 4);
+  }
+  return path;
+}
+
+function generateEdgePath(w, h, seed) {
+  const rng = mulberry32(seed);
+  const path = new Path2D();
+  for(let i=0; i<4; i++){
+    const x1 = 4 + rng()*(w-8);
+    const y1 = h - 5 - rng()*6;
+    path.moveTo(x1, y1);
+    path.lineTo(x1 + 6 + rng()*10, y1 + 2 + rng()*3);
+  }
+  for(let i=0; i<3; i++){
+    const x1 = w - 6 - rng()*5;
+    const y1 = 6 + rng()*(h-12);
+    path.moveTo(x1, y1);
+    path.lineTo(x1 + 2 + rng()*3, y1 + 5 + rng()*8);
+  }
+  return path;
+}
+
 /* ── Audio ── */
 let audioCtx = null;
 function ensureAudio(){
@@ -235,7 +273,14 @@ function spawnWord(){
     letters, index:0,
     spawnedAt:performance.now(),
     duration:letters.length*MS_PER_LETTER,
-    boxes:letters.map((_,i)=>({wf:0,pf:0,bounce:0,seed:Math.floor(Math.random()*99999+i*1000)})),
+    boxes:letters.map((_,i)=>{
+      const seed = Math.floor(Math.random()*99999+i*1000);
+      return {
+        wf:0, pf:0, bounce:0, seed,
+        sketchPath: generateSketchPath(56, 52, seed),
+        edgePath: generateEdgePath(56, 52, seed)
+      };
+    }),
     enter:0
   };
 }
@@ -397,7 +442,7 @@ const KEYCAP_PALETTES = {
   }
 };
 
-function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, seed){
+function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, box){
   const DEPTH_REST = 10;
   const DEPTH_PRESS = 2;
   const currentDepth = DEPTH_REST - (DEPTH_REST-DEPTH_PRESS)*liftT;
@@ -488,54 +533,14 @@ function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, seed
   roundRect(-w/2+1, topY+1, w-2, h-2, r-1);
   ctx.clip();
 
-  const rng = mulberry32(seed);
+  ctx.translate(-w/2, topY);
+
   ctx.strokeStyle = pal.sketchColor;
   ctx.lineWidth = 0.8;
+  if(box.sketchPath) ctx.stroke(box.sketchPath);
 
-  // Diagonal hatching lines (manga cross-hatch feel)
-  for(let i=0; i<8; i++){
-    const x1 = -w/2 + rng()*w;
-    const y1 = topY + rng()*h;
-    const len = 8 + rng()*18;
-    const ang = -0.6 + rng()*0.4; // mostly diagonal
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 + Math.cos(ang)*len, y1 + Math.sin(ang)*len);
-    ctx.stroke();
-  }
-  // A few curved sketch strokes
-  for(let i=0; i<3; i++){
-    const x1 = -w/2 + rng()*w*0.8;
-    const y1 = topY + h*0.3 + rng()*h*0.5;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.quadraticCurveTo(
-      x1 + rng()*15 - 5, y1 + rng()*12 - 6,
-      x1 + 10 + rng()*12, y1 + rng()*8 - 4
-    );
-    ctx.stroke();
-  }
-  // Edge darkening strokes (like manga shadow lines at edges)
-  ctx.strokeStyle = pal.sketchColor;
   ctx.lineWidth = 1.2;
-  // bottom edge strokes
-  for(let i=0; i<4; i++){
-    const x1 = -w/2+4 + rng()*(w-8);
-    const y1 = topY + h - 5 - rng()*6;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 + 6 + rng()*10, y1 + 2 + rng()*3);
-    ctx.stroke();
-  }
-  // right edge strokes
-  for(let i=0; i<3; i++){
-    const x1 = w/2 - 6 - rng()*5;
-    const y1 = topY + 6 + rng()*(h-12);
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x1 + 2 + rng()*3, y1 + 5 + rng()*8);
-    ctx.stroke();
-  }
+  if(box.edgePath) ctx.stroke(box.edgePath);
 
   ctx.restore();
 
@@ -671,18 +676,17 @@ function drawWord(now, dt){
   ctx.fillStyle = woodGrad;
   ctx.fill();
 
-  // Wood grain lines
+  // Wood grain static lines
   ctx.save();
   roundRect(caseX+6, woodY, caseW-12, woodH, 4);
   ctx.clip();
   ctx.strokeStyle='rgba(255,255,255,0.04)';
   ctx.lineWidth=0.5;
-  for(let i=0;i<8;i++){
-    const gy = woodY+2+Math.random()*(woodH-4);
-    ctx.beginPath();ctx.moveTo(caseX+10,gy);
-    ctx.lineTo(caseX+caseW-10,gy+(Math.random()-0.5)*3);
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.moveTo(caseX+10, woodY+4); ctx.lineTo(caseX+caseW-10, woodY+5);
+  ctx.moveTo(caseX+10, woodY+8); ctx.lineTo(caseX+caseW-10, woodY+7);
+  ctx.moveTo(caseX+10, woodY+11); ctx.lineTo(caseX+caseW-10, woodY+12);
+  ctx.stroke();
   ctx.restore();
 
   // ── Progress bar (inside case, below keys) ──
@@ -726,7 +730,7 @@ function drawWord(now, dt){
     else if(i===word.index){status='active';liftT=0.15;}
     if(i===word.index-1) liftT=Math.max(liftT,box.pf);
 
-    drawKeycap(bx, c.y, boxW, boxH, letter, status, liftT, box.wf, box.bounce, box.seed);
+    drawKeycap(bx, c.y, boxW, boxH, letter, status, liftT, box.wf, box.bounce, box);
   });
 
   ctx.restore();
