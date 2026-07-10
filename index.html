@@ -111,6 +111,31 @@
   
   .playing #menu-ui { opacity: 0; transform: translateY(-20px); }
   
+  /* Mode Select UI */
+  #mode-select-ui {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: center; align-items: center; gap: 30px;
+    opacity: 0; pointer-events: none; z-index: 25;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    transform: translateY(20px);
+  }
+  .mode-select-active #mode-select-ui {
+    opacity: 1; transform: translateY(0); pointer-events: auto;
+  }
+  .mode-card {
+    background: rgba(26,20,18,0.7); border: 1px solid rgba(255,255,255,0.05);
+    padding: 40px 25px; border-radius: 16px; text-align: center; width: 280px;
+    backdrop-filter: blur(12px); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .mode-key {
+    display: inline-block; background: #e8e2d8; color: #3a3530;
+    font-size: 32px; font-weight: 900; padding: 12px 28px; border-radius: 10px;
+    box-shadow: 0 6px 0 #b0a898, 0 10px 20px rgba(0,0,0,0.4);
+    margin-bottom: 25px; font-family: 'Inter', sans-serif;
+  }
+  .mode-card h3 { color: #d4a855; margin-bottom: 15px; font-size: 22px; letter-spacing: 3px;}
+  .mode-card p { color: rgba(210,195,180,0.6); font-size: 13px; line-height: 1.6; font-family:'JetBrains Mono', monospace;}
+
   #hud, #combo-wrap, #streak, #log, #footer { opacity: 0; transition: opacity 0.5s ease; }
   .playing #hud, .playing #combo-wrap, .playing #streak, .playing #log, .playing #footer { opacity: 1; }
 </style>
@@ -121,6 +146,23 @@
   <div id="menu-ui">
     <h1>KEYBOUND</h1>
     <p>BAŞLAMAK İÇİN YAZ</p>
+  </div>
+  <div id="mode-select-ui">
+    <div class="mode-card">
+      <div class="mode-key">S</div>
+      <h3>SERBEST</h3>
+      <p>Yanma yok, süre yok. Sadece rahatla ve yaz.</p>
+    </div>
+    <div class="mode-card">
+      <div class="mode-key">N</div>
+      <h3>NORMAL</h3>
+      <p>Süreye karşı yarış. Hata yaparsan kombon sıfırlanır.</p>
+    </div>
+    <div class="mode-card">
+      <div class="mode-key">A</div>
+      <h3>ACIMASIZ</h3>
+      <p>Hata yapmak veya süreyi kaçırmak yasak. Affı yok.</p>
+    </div>
   </div>
   <div id="hud">
     <div class="hud-box"><span class="label">TEMPO</span><span class="value" id="tempo">100%</span></div>
@@ -281,7 +323,8 @@ function playSuccess(){
 }
 
 /* ── State ── */
-let gameState = 'MENU'; // 'MENU' or 'PLAYING'
+let gameState = 'MENU';
+let currentMode = 'NORMAL';
 
 const state = {
   tempo:1, targetTempo:1, combo:0, maxCombo:0,
@@ -325,7 +368,7 @@ function spawnWord(){
   word = {
     letters, index:0,
     spawnedAt:performance.now(),
-    duration:letters.length*MS_PER_LETTER,
+    duration: currentMode === 'SERBEST' ? Infinity : letters.length*MS_PER_LETTER,
     boxes:letters.map((_,i)=>{
       const seed = Math.floor(Math.random()*99999+i*1000);
       return {
@@ -370,25 +413,11 @@ function completeWord(){
   const c=wordCenter();
 
   if (gameState === 'MENU') {
-    gameState = 'PLAYING';
-    document.body.classList.add('playing');
-    state.combo=0; state.maxCombo=0;
-    state.wordsCompleted=0; state.wordsMissed=0;
-    state.tempo=1; state.targetTempo=1;
-    updateHud();
+    gameState = 'MODESELECT';
+    document.body.classList.add('mode-select-active');
+    document.getElementById('menu-ui').style.opacity = '0';
     playSuccess();
-    for(let i=0;i<16;i++){
-      const a=Math.random()*Math.PI*2, sp=80+Math.random()*150;
-      bursts.push({
-        x:c.x, y:c.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-50,
-        life:0.6+Math.random()*0.5, ml:0.6+Math.random()*0.5,
-        size:2.5+Math.random()*2,
-        type: Math.random()>0.5?'gold':'cream'
-      });
-    }
-    logEl.innerHTML='';
-    logLine('OYUN BAŞLADI', 'hit');
-    word=null; nextSpawnAt=performance.now()+500;
+    word=null;
     return;
   }
 
@@ -421,9 +450,72 @@ function missWord(reason){
   word=null; nextSpawnAt=performance.now()+650;
 }
 
+function startGame(mode) {
+  currentMode = mode;
+  gameState = 'PLAYING';
+  document.body.classList.remove('mode-select-active');
+  document.body.classList.add('playing');
+  
+  state.combo=0; state.maxCombo=0;
+  state.wordsCompleted=0; state.wordsMissed=0;
+  state.tempo=1; state.targetTempo=1;
+  updateHud();
+  playSuccess();
+  
+  const c=wordCenter();
+  for(let i=0;i<16;i++){
+    const a=Math.random()*Math.PI*2, sp=80+Math.random()*150;
+    bursts.push({
+      x:c.x, y:c.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-50,
+      life:0.6+Math.random()*0.5, ml:0.6+Math.random()*0.5,
+      size:2.5+Math.random()*2,
+      type: Math.random()>0.5?'gold':'cream'
+    });
+  }
+  logEl.innerHTML='';
+  logLine(`MOD: ${mode} -- BAŞLIYOR`, 'hit');
+  word=null; nextSpawnAt=performance.now()+500;
+}
+
+function gameOver(reason) {
+  gameState = 'GAMEOVER';
+  word = null;
+  document.body.classList.remove('playing');
+  document.body.classList.add('game-over');
+  document.getElementById('menu-ui').style.opacity = '1';
+  document.getElementById('menu-ui').innerHTML = `
+    <h1 style="color:#c45c4a; font-size:40px;">OYUN BİTTİ</h1>
+    <p style="font-size:16px;">${reason}</p>
+    <p style="margin-top:24px; color:#d4a855; font-size:12px; letter-spacing:2px;">MENÜYE DÖNMEK İÇİN <span style="color:#fff; font-weight:800; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">SPACE</span> BAS</p>
+  `;
+  logLine(`OYUN BİTTİ: ${reason}`, 'miss');
+}
+
 window.addEventListener('keydown',(e)=>{
   const key=e.key.toLocaleUpperCase('tr-TR');
-  if(!word||performance.now()<state.frozenUntil) return;
+
+  if (gameState === 'MODESELECT') {
+    if (key === 'S') startGame('SERBEST');
+    else if (key === 'N') startGame('NORMAL');
+    else if (key === 'A') startGame('ACIMASIZ');
+    return;
+  }
+  
+  if (gameState === 'GAMEOVER') {
+    if (e.code === 'Space') {
+      gameState = 'MENU';
+      document.body.classList.remove('game-over');
+      document.getElementById('menu-ui').innerHTML = `
+        <h1>KEYBOUND</h1>
+        <p>BAŞLAMAK İÇİN YAZ</p>
+      `;
+      spawnMenuWord();
+    }
+    return;
+  }
+
+  if(!word||performance.now()<state.frozenUntil || gameState !== 'PLAYING') return;
+
   const expected=word.letters[word.index];
   if(key===expected){
     word.boxes[word.index].pf=1;
@@ -441,9 +533,17 @@ window.addEventListener('keydown',(e)=>{
     }
     if(word.index>=word.letters.length) completeWord();
   } else if(/^[A-ZÇĞİÖŞÜ]$/.test(key)){
+    if (currentMode === 'ACIMASIZ') {
+      gameOver('YANLIŞ TUŞA BASTIN');
+      return;
+    }
+    if (currentMode !== 'SERBEST') {
+      state.combo = 0;
+    }
     word.boxes[word.index].wf=1;
     state.shake=0.08;
     keyClack('wrong');
+    updateHud();
   }
 });
 
@@ -771,7 +871,7 @@ function drawWord(now, dt){
   ctx.restore();
 
   // ── Progress bar (inside case, below keys) ──
-  if (gameState === 'PLAYING') {
+  if (gameState === 'PLAYING' && currentMode !== 'SERBEST') {
     const elapsed=(now-word.spawnedAt)*state.tempo;
     const remaining=Math.max(0,1-elapsed/word.duration);
     const barY=c.y+boxH/2+14;
@@ -920,6 +1020,8 @@ function createMenuPattern() {
 function updateAndDrawFallingWords(dt) {
   if (gameState === 'PLAYING') {
     menuBgAlpha = Math.max(0, menuBgAlpha - dt * 0.4);
+  } else {
+    menuBgAlpha = Math.min(1, menuBgAlpha + dt * 0.4);
   }
   
   if (menuBgAlpha > 0 && menuPattern) {
@@ -955,7 +1057,10 @@ function loop(now){
       if(!word&&now>=nextSpawnAt) spawnWord();
       if(word){
         const elapsed=(now-word.spawnedAt)*state.tempo;
-        if(elapsed>=word.duration) missWord('sure doldu');
+        if(elapsed>=word.duration) {
+          if (currentMode === 'ACIMASIZ') gameOver('SÜRE DOLDU');
+          else missWord('SÜRE DOLDU');
+        }
       }
     } else if (gameState === 'MENU') {
       if(!word) spawnMenuWord();
