@@ -244,6 +244,7 @@
   }
   .settings-item .toggle-val { margin-left: auto; color: #8aad7a; font-weight: 700; }
   .settings-item .toggle-val.off { color: #c45c4a; }
+  .settings-item .toggle-val.lang-val { color: #d4a855; }
 
   /* Key currency HUD */
   .hud-left{ display:flex; gap:10px; }
@@ -371,26 +372,26 @@
   <canvas id="c"></canvas>
   <div id="menu-ui">
     <h1>KEYBOUND</h1>
-    <p>OYNA, MAĞAZA ya da AYARLAR YAZ</p>
+    <p id="menu-subtitle">OYNA, MAĞAZA ya da AYARLAR YAZ</p>
     <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
   </div>
   <div id="mode-select-ui">
     <div class="mode-card">
       <div class="mode-key">S</div>
-      <h3>SERBEST</h3>
-      <p>Yanma yok, süre yok. Sadece rahatla ve yaz.</p>
+      <h3 id="mode-title-SERBEST">SERBEST</h3>
+      <p id="mode-desc-SERBEST">Yanma yok, süre yok. Sadece rahatla ve yaz.</p>
       <div class="mode-record" id="rec-SERBEST"></div>
     </div>
     <div class="mode-card">
       <div class="mode-key">N</div>
-      <h3>NORMAL</h3>
-      <p>Süreye karşı yarış. Hata yaparsan kombon sıfırlanır.</p>
+      <h3 id="mode-title-NORMAL">NORMAL</h3>
+      <p id="mode-desc-NORMAL">Süreye karşı yarış. Hata yaparsan kombon sıfırlanır.</p>
       <div class="mode-record" id="rec-NORMAL"></div>
     </div>
     <div class="mode-card">
       <div class="mode-key">A</div>
-      <h3>ACIMASIZ</h3>
-      <p>Hata yapmak veya süreyi kaçırmak yasak. Affı yok.</p>
+      <h3 id="mode-title-ACIMASIZ">ACIMASIZ</h3>
+      <p id="mode-desc-ACIMASIZ">Hata yapmak veya süreyi kaçırmak yasak. Affı yok.</p>
       <div class="mode-record" id="rec-ACIMASIZ"></div>
     </div>
   </div>
@@ -398,44 +399,45 @@
     <div id="countdown-num"></div>
   </div>
   <div id="pause-ui">
-    <h2>DURAKLATILDI</h2>
+    <h2 id="pause-title">DURAKLATILDI</h2>
     <div class="pause-options">
-      <div class="pause-item"><span class="key">ESC</span> DEVAM ET</div>
-      <div class="pause-item"><span class="key">Q</span> MENÜYE DÖN</div>
+      <div class="pause-item"><span class="key">ESC</span> <span id="pause-resume-label">DEVAM ET</span></div>
+      <div class="pause-item"><span class="key">Q</span> <span id="pause-back-label">MENÜYE DÖN</span></div>
     </div>
   </div>
   <div id="settings-ui">
-    <h2>AYARLAR</h2>
+    <h2 id="set-title">AYARLAR</h2>
     <div class="settings-options">
-      <div class="settings-item"><span class="key">S</span> SES <span class="toggle-val" id="set-sound">AÇIK</span></div>
-      <div class="settings-item"><span class="key">E</span> EFEKTLER <span class="toggle-val" id="set-effects">AÇIK</span></div>
-      <div class="settings-item"><span class="key">M</span> MÜZİK <span class="toggle-val" id="set-music">AÇIK</span></div>
-      <div class="settings-item"><span class="key">ESC</span> MENÜYE DÖN</div>
+      <div class="settings-item"><span class="key">S</span> <span id="set-sound-label">SES</span> <span class="toggle-val" id="set-sound">AÇIK</span></div>
+      <div class="settings-item"><span class="key">E</span> <span id="set-effects-label">EFEKTLER</span> <span class="toggle-val" id="set-effects">AÇIK</span></div>
+      <div class="settings-item"><span class="key">M</span> <span id="set-music-label">MÜZİK</span> <span class="toggle-val" id="set-music">AÇIK</span></div>
+      <div class="settings-item"><span class="key">L</span> <span id="set-lang-label">DİL</span> <span class="toggle-val lang-val" id="set-lang">TR</span></div>
+      <div class="settings-item"><span class="key">ESC</span> <span id="set-back-label">MENÜYE DÖN</span></div>
     </div>
   </div>
   <div id="store-ui">
-    <h2>MAĞAZA</h2>
-    <div class="store-subtitle">görünümünü kişiselleştir</div>
-    <div class="store-key-balance"><span class="coin"></span>SAHİP OLDUĞUN KEY: <span id="store-key-count">0</span></div>
+    <h2 id="store-title">MAĞAZA</h2>
+    <div class="store-subtitle" id="store-subtitle">görünümünü kişiselleştir</div>
+    <div class="store-key-balance"><span class="coin"></span><span id="store-balance-label">SAHİP OLDUĞUN KEY:</span> <span id="store-key-count">0</span></div>
     <div class="store-tabs">
-      <div class="store-tab active" data-tab="keycap" onclick="switchStoreTab('keycap')"><span class="tab-icon">⌨</span>TUŞ TAKIMI</div>
-      <div class="store-tab" data-tab="main" onclick="switchStoreTab('main')"><span class="tab-icon">◐</span>ARKA PLAN</div>
-      <div class="store-tab" data-tab="special" onclick="switchStoreTab('special')"><span class="tab-icon">✦</span>KEYBOARD</div>
+      <div class="store-tab active" data-tab="keycap" onclick="switchStoreTab('keycap')"><span class="tab-icon">⌨</span><span id="store-tab-keycap">TUŞ TAKIMI</span></div>
+      <div class="store-tab" data-tab="main" onclick="switchStoreTab('main')"><span class="tab-icon">◐</span><span id="store-tab-main">ARKA PLAN</span></div>
+      <div class="store-tab" data-tab="special" onclick="switchStoreTab('special')"><span class="tab-icon">✦</span><span id="store-tab-special">KEYBOARD</span></div>
     </div>
     <div class="store-grid" id="store-grid"></div>
     <div class="store-footer-hint">
-      <div><span class="key">TAB</span>KATEGORİ DEĞİŞTİR</div>
-      <div><span class="key">1-6</span>SATIN AL / KUŞAN</div>
-      <div><span class="key">ESC</span>MENÜYE DÖN</div>
+      <div><span class="key">TAB</span><span id="store-hint-tab">KATEGORİ DEĞİŞTİR</span></div>
+      <div><span class="key">1-6</span><span id="store-hint-buy">SATIN AL / KUŞAN</span></div>
+      <div><span class="key">ESC</span><span id="store-hint-back">MENÜYE DÖN</span></div>
     </div>
   </div>
   <div id="hud">
     <div class="hud-left">
-      <div class="hud-box"><span class="label">TEMPO</span><span class="value" id="tempo">100%</span></div>
-      <div class="hud-box"><span class="label">KEY</span><span class="value key-value" id="key-count">0</span></div>
+      <div class="hud-box"><span class="label" id="hud-label-tempo">TEMPO</span><span class="value" id="tempo">100%</span></div>
+      <div class="hud-box"><span class="label" id="hud-label-key">KEY</span><span class="value key-value" id="key-count">0</span></div>
     </div>
     <div class="hud-title">KEYBOUND</div>
-    <div class="hud-box"><span class="label">ACC</span><span class="value" id="acc">--</span></div>
+    <div class="hud-box"><span class="label" id="hud-label-acc">ACC</span><span class="value" id="acc">--</span></div>
   </div>
   <div id="combo-wrap"><div id="combo">COMBO 0</div></div>
   <div id="streak"></div>
@@ -450,6 +452,142 @@ let W, H, CX, CY;
 
 let bgCanvas = null;      // aktif oyun ekranı arka planı (tema ne olursa olsun)
 let bgCanvasMenu = null;  // mousepad kuşanılıyken menüde gösterilecek nötr arka plan
+
+/* ── i18n (TR / EN) ── */
+const LANG_STORAGE_KEY = 'keybound_lang_v1';
+function loadLang(){
+  try{ const v = localStorage.getItem(LANG_STORAGE_KEY); if(v==='en'||v==='tr') return v; }catch(e){}
+  return 'tr';
+}
+let lang = loadLang();
+function saveLang(){ try{ localStorage.setItem(LANG_STORAGE_KEY, lang); }catch(e){} }
+
+const I18N = {
+  tr: {
+    menuSubtitle: 'OYNA, MAĞAZA ya da AYARLAR YAZ',
+    menuWord: ['O','Y','N','A'],
+    settingsWord: ['A','Y','A','R','L','A','R'],
+    storeWord: ['M','A','Ğ','A','Z','A'],
+    modeTitle: { SERBEST:'SERBEST', NORMAL:'NORMAL', ACIMASIZ:'ACIMASIZ' },
+    modeDesc: {
+      SERBEST:'Yanma yok, süre yok. Sadece rahatla ve yaz.',
+      NORMAL:'Süreye karşı yarış. Hata yaparsan kombon sıfırlanır.',
+      ACIMASIZ:'Hata yapmak veya süreyi kaçırmak yasak. Affı yok.'
+    },
+    pauseTitle:'DURAKLATILDI', pauseResume:'DEVAM ET', pauseBack:'MENÜYE DÖN',
+    settingsTitle:'AYARLAR', settingsSound:'SES', settingsEffects:'EFEKTLER',
+    settingsMusic:'MÜZİK', settingsLang:'DİL', settingsBack:'MENÜYE DÖN',
+    on:'AÇIK', off:'KAPALI',
+    storeTitle:'MAĞAZA', storeSubtitle:'görünümünü kişiselleştir',
+    storeBalance:'SAHİP OLDUĞUN KEY:',
+    tabKeycap:'TUŞ TAKIMI', tabMain:'ARKA PLAN', tabSpecial:'KEYBOARD',
+    hintTab:'KATEGORİ DEĞİŞTİR', hintBuy:'SATIN AL / KUŞAN', hintBack:'MENÜYE DÖN',
+    equipped:'KUŞANILDI', equip:'KUŞAN',
+    themeEquipped:'TEMA KUŞANILDI', themeRemoved:'TEMA ÇIKARILDI',
+    purchased:'SATIN ALINDI', insufficient:'YETERSİZ KEY', needed:'gerekli',
+    hudTempo:'TEMPO', hudKey:'KEY', hudAcc:'ACC',
+    footerHint:'kelimeyi bar bitmeden yaz',
+    modStarting:'BAŞLIYOR',
+    noRecord:'Henüz kayıt yok', best:'EN İYİ', wordsUnit:'kelime', comboUnit:'kombo',
+    done:'TAMAM', missed:'KAÇTI', timeUp:'SÜRE DOLDU',
+    gameOverTitle:'OYUN BİTTİ', sessionDoneTitle:'OTURUM TAMAMLANDI', newRecordSuffix:'YENİ REKOR KIRDIN!',
+    statWords:'KELİME', statCombo:'KOMBO', statAcc:'İSABET', statWpm:'DK/KEL', newRecordBadge:'★ YENİ REKOR',
+    backToMenuPrefix:'MENÜYE DÖNMEK İÇİN', backToMenuSuffix:'BAS',
+    sceneReady:'sahne hazir -- kelimeyi bar bitmeden yaz',
+    sessionSummaryReason:'OTURUM ÖZETİ',
+    themeNames: {
+      default:'VARSAYILAN', ocean:'OKYANUS', emerald:'ZÜMRÜT', keyboard_default:'VARSAYILAN',
+      black_plastic:'SİYAH PLASTİK', rgb:'RGB',
+      main_default:'VARSAYILAN', main_ocean:'DERİN OKYANUS', main_ember:'KIZIL ALEV',
+      main_forest:'ORMAN', main_mousepad:'MOUSEPAD', main_rgb:'RGB'
+    }
+  },
+  en: {
+    menuSubtitle: 'TYPE PLAY, STORE OR SETTINGS',
+    menuWord: ['P','L','A','Y'],
+    settingsWord: ['S','E','T','T','I','N','G','S'],
+    storeWord: ['S','T','O','R','E'],
+    modeTitle: { SERBEST:'FREE', NORMAL:'NORMAL', ACIMASIZ:'RUTHLESS' },
+    modeDesc: {
+      SERBEST:'No burnout, no timer. Just relax and type.',
+      NORMAL:'Race the clock. A mistake resets your combo.',
+      ACIMASIZ:'No mistakes allowed. Miss the timer and it is over. No mercy.'
+    },
+    pauseTitle:'PAUSED', pauseResume:'RESUME', pauseBack:'BACK TO MENU',
+    settingsTitle:'SETTINGS', settingsSound:'SOUND', settingsEffects:'EFFECTS',
+    settingsMusic:'MUSIC', settingsLang:'LANGUAGE', settingsBack:'BACK TO MENU',
+    on:'ON', off:'OFF',
+    storeTitle:'STORE', storeSubtitle:'customize your look',
+    storeBalance:'KEYS OWNED:',
+    tabKeycap:'KEYCAPS', tabMain:'BACKGROUND', tabSpecial:'KEYBOARD',
+    hintTab:'SWITCH CATEGORY', hintBuy:'BUY / EQUIP', hintBack:'BACK TO MENU',
+    equipped:'EQUIPPED', equip:'EQUIP',
+    themeEquipped:'THEME EQUIPPED', themeRemoved:'THEME REMOVED',
+    purchased:'PURCHASED', insufficient:'NOT ENOUGH KEYS', needed:'needed',
+    hudTempo:'TEMPO', hudKey:'KEY', hudAcc:'ACC',
+    footerHint:'type the word before the bar runs out',
+    modStarting:'STARTING',
+    noRecord:'No record yet', best:'BEST', wordsUnit:'words', comboUnit:'combo',
+    done:'DONE', missed:'MISSED', timeUp:'TIME UP',
+    gameOverTitle:'GAME OVER', sessionDoneTitle:'SESSION COMPLETE', newRecordSuffix:'NEW RECORD!',
+    statWords:'WORDS', statCombo:'COMBO', statAcc:'ACCURACY', statWpm:'WPM', newRecordBadge:'★ NEW RECORD',
+    backToMenuPrefix:'PRESS', backToMenuSuffix:'TO RETURN TO MENU',
+    sceneReady:'scene ready -- type the word before the bar runs out',
+    sessionSummaryReason:'SESSION SUMMARY',
+    themeNames: {
+      default:'DEFAULT', ocean:'OCEAN', emerald:'EMERALD', keyboard_default:'DEFAULT',
+      black_plastic:'BLACK PLASTIC', rgb:'RGB',
+      main_default:'DEFAULT', main_ocean:'DEEP OCEAN', main_ember:'CRIMSON FLAME',
+      main_forest:'FOREST', main_mousepad:'MOUSEPAD', main_rgb:'RGB'
+    }
+  }
+};
+function t(){ return I18N[lang]; }
+function themeName(themeObj){ return (t().themeNames[themeObj.id]) || themeObj.name; }
+
+function applyLanguage(){
+  document.documentElement.lang = lang;
+  const L = t();
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+
+  setText('menu-subtitle', L.menuSubtitle);
+  setText('mode-title-SERBEST', L.modeTitle.SERBEST);
+  setText('mode-title-NORMAL', L.modeTitle.NORMAL);
+  setText('mode-title-ACIMASIZ', L.modeTitle.ACIMASIZ);
+  setText('mode-desc-SERBEST', L.modeDesc.SERBEST);
+  setText('mode-desc-NORMAL', L.modeDesc.NORMAL);
+  setText('mode-desc-ACIMASIZ', L.modeDesc.ACIMASIZ);
+  setText('pause-title', L.pauseTitle);
+  setText('pause-resume-label', L.pauseResume);
+  setText('pause-back-label', L.pauseBack);
+  setText('set-title', L.settingsTitle);
+  setText('set-sound-label', L.settingsSound);
+  setText('set-effects-label', L.settingsEffects);
+  setText('set-music-label', L.settingsMusic);
+  setText('set-lang-label', L.settingsLang);
+  setText('set-back-label', L.settingsBack);
+  setText('set-lang', lang.toUpperCase());
+  setText('store-title', L.storeTitle);
+  setText('store-subtitle', L.storeSubtitle);
+  setText('store-balance-label', L.storeBalance);
+  setText('store-tab-keycap', L.tabKeycap);
+  setText('store-tab-main', L.tabMain);
+  setText('store-tab-special', L.tabSpecial);
+  setText('store-hint-tab', L.hintTab);
+  setText('store-hint-buy', L.hintBuy);
+  setText('store-hint-back', L.hintBack);
+  setText('hud-label-tempo', L.hudTempo);
+  setText('hud-label-key', L.hudKey);
+  setText('hud-label-acc', L.hudAcc);
+
+  const footerEl = document.getElementById('footer');
+  if(footerEl) footerEl.textContent = L.footerHint;
+
+  if(typeof updateSettingsUI === 'function') updateSettingsUI();
+  if(typeof updateStoreUI === 'function' && document.getElementById('store-grid')) updateStoreUI();
+  if(typeof updateModeRecordsUI === 'function') updateModeRecordsUI();
+}
+
 function createBackgroundCache() {
   let mt = null;
   try{ mt = getMainTheme(); }catch(e){}
@@ -680,12 +818,15 @@ function updateSettingsUI(){
   const soundEl = document.getElementById('set-sound');
   const fxEl = document.getElementById('set-effects');
   const musicEl = document.getElementById('set-music');
-  soundEl.textContent = settings.sound ? 'AÇIK' : 'KAPALI';
+  const L = t();
+  soundEl.textContent = settings.sound ? L.on : L.off;
   soundEl.classList.toggle('off', !settings.sound);
-  fxEl.textContent = settings.effects ? 'AÇIK' : 'KAPALI';
+  fxEl.textContent = settings.effects ? L.on : L.off;
   fxEl.classList.toggle('off', !settings.effects);
-  musicEl.textContent = settings.music ? 'AÇIK' : 'KAPALI';
+  musicEl.textContent = settings.music ? L.on : L.off;
   musicEl.classList.toggle('off', !settings.music);
+  const langEl = document.getElementById('set-lang');
+  if(langEl) langEl.textContent = lang.toUpperCase();
 }
 
 /* ── Key currency ── */
@@ -838,47 +979,49 @@ function updateStoreUI(){
   });
   const isSpecialTab = storeTab === 'special';
   const list = getStoreList(storeTab);
-  grid.innerHTML = list.map((t,i)=>{
-    const isKeycap = t.catType === 'keycap';
+  const L = t();
+  grid.innerHTML = list.map((th,i)=>{
+    const isKeycap = th.catType === 'keycap';
     const themeState = isKeycap ? shopState : mainShopState;
-    const owned = t.isDefaultToggle ? true : themeState.owned.includes(t.id);
+    const owned = th.isDefaultToggle ? true : themeState.owned.includes(th.id);
     // Özel sekmede equip durumu kendi bağımsız slotundan okunur (diğer
     // sekmelerdeki seçimden etkilenmez); normal sekmelerde her zamanki gibi.
     let equipped;
-    if(t.isDefaultToggle) equipped = !specialShopState.equippedKeycap;
-    else if(isSpecialTab) equipped = (isKeycap ? specialShopState.equippedKeycap === t.id : specialShopState.equippedMain === t.id);
-    else equipped = themeState.equipped === t.id;
+    if(th.isDefaultToggle) equipped = !specialShopState.equippedKeycap;
+    else if(isSpecialTab) equipped = (isKeycap ? specialShopState.equippedKeycap === th.id : specialShopState.equippedMain === th.id);
+    else equipped = themeState.equipped === th.id;
     let statusHtml;
-    if(equipped) statusHtml = `<div class="store-status owned">✓ KUŞANILDI</div>`;
-    else if(owned) statusHtml = `<div class="store-status owned">KUŞAN</div>`;
-    else statusHtml = `<div class="store-status locked">🔒 ${t.cost} <span class="coin" style="width:10px;height:10px;display:inline-block;"></span></div>`;
-    const swatchStyle = (t.animated || t.mousepad) ? '' : `style="background:linear-gradient(135deg, ${themeSwatchColors(t,isKeycap)[0]}, ${themeSwatchColors(t,isKeycap)[1]})"`;
-    return `<div class="store-card${equipped?' equipped':''}${!owned?' locked':''}${t.animated?' rgb-swatch':''}${t.mousepad?' mousepad-swatch':''}">
+    if(equipped) statusHtml = `<div class="store-status owned">✓ ${L.equipped}</div>`;
+    else if(owned) statusHtml = `<div class="store-status owned">${L.equip}</div>`;
+    else statusHtml = `<div class="store-status locked">🔒 ${th.cost} <span class="coin" style="width:10px;height:10px;display:inline-block;"></span></div>`;
+    const swatchStyle = (th.animated || th.mousepad) ? '' : `style="background:linear-gradient(135deg, ${themeSwatchColors(th,isKeycap)[0]}, ${themeSwatchColors(th,isKeycap)[1]})"`;
+    return `<div class="store-card${equipped?' equipped':''}${!owned?' locked':''}${th.animated?' rgb-swatch':''}${th.mousepad?' mousepad-swatch':''}">
       <div class="store-key-badge">${i+1}</div>
       ${equipped?'<div class="store-ribbon">✓</div>':''}
       <div class="store-swatch" ${swatchStyle}></div>
-      <h4>${t.name}</h4>
+      <h4>${themeName(th)}</h4>
       ${statusHtml}
     </div>`;
   }).join('');
 }
 function handleThemeSelect(idx){
   const list = getStoreList(storeTab);
-  const t = list[idx];
-  if(!t) return;
-  const isKeycap = t.catType === 'keycap';
+  const th = list[idx];
+  if(!th) return;
+  const L = t();
+  const isKeycap = th.catType === 'keycap';
   const themeState = isKeycap ? shopState : mainShopState;
   const save = isKeycap ? saveShop : saveMainShop;
-  const owned = t.isDefaultToggle ? true : themeState.owned.includes(t.id);
+  const owned = th.isDefaultToggle ? true : themeState.owned.includes(th.id);
   const isSpecialTab = storeTab === 'special';
   const specialSlot = isKeycap ? 'equippedKeycap' : 'equippedMain';
 
-  if(t.isDefaultToggle){
+  if(th.isDefaultToggle){
     // KEYBOARD sekmesindeki VARSAYILAN: özel katmanı doğrudan kapatır.
     specialShopState.equippedKeycap = null;
     saveSpecialShop();
     playSuccess();
-    logLine(`TEMA KUŞANILDI: ${t.name}`,'hit');
+    logLine(`${L.themeEquipped}: ${themeName(th)}`,'hit');
     updateStoreUI();
     return;
   }
@@ -887,51 +1030,51 @@ function handleThemeSelect(idx){
     // Özel kategori: diğer sekmelerdeki seçimi bozmadan kendi bağımsız
     // slotuna kuşanır; tekrar seçilirse söker (kapatır).
     if(owned){
-      specialShopState[specialSlot] = (specialShopState[specialSlot] === t.id) ? null : t.id;
+      specialShopState[specialSlot] = (specialShopState[specialSlot] === th.id) ? null : th.id;
       saveSpecialShop();
       applyMainTheme();
       playSuccess();
-      logLine(specialShopState[specialSlot] === t.id ? `TEMA KUŞANILDI: ${t.name}` : `TEMA ÇIKARILDI: ${t.name}`,'hit');
-    } else if(playerKeys >= t.cost){
-      playerKeys -= t.cost;
+      logLine(specialShopState[specialSlot] === th.id ? `${L.themeEquipped}: ${themeName(th)}` : `${L.themeRemoved}: ${themeName(th)}`,'hit');
+    } else if(playerKeys >= th.cost){
+      playerKeys -= th.cost;
       saveKeys();
-      themeState.owned.push(t.id);
+      themeState.owned.push(th.id);
       save();
-      specialShopState[specialSlot] = t.id;
+      specialShopState[specialSlot] = th.id;
       saveSpecialShop();
       applyMainTheme();
       playSuccess();
-      logLine(`SATIN ALINDI: ${t.name}`,'hit');
+      logLine(`${L.purchased}: ${themeName(th)}`,'hit');
     } else {
       keyClack('wrong');
       state.shake = Math.max(state.shake, 0.15);
-      logLine(`YETERSİZ KEY: ${t.name} (${t.cost} gerekli)`,'miss');
+      logLine(`${L.insufficient}: ${themeName(th)} (${th.cost} ${L.needed})`,'miss');
     }
     updateStoreUI();
     return;
   }
 
   if(owned){
-    if(themeState.equipped !== t.id){
-      themeState.equipped = t.id;
+    if(themeState.equipped !== th.id){
+      themeState.equipped = th.id;
       save();
       if(!isKeycap) applyMainTheme();
       playSuccess();
-      logLine(`TEMA KUŞANILDI: ${t.name}`,'hit');
+      logLine(`${L.themeEquipped}: ${themeName(th)}`,'hit');
     }
-  } else if(playerKeys >= t.cost){
-    playerKeys -= t.cost;
+  } else if(playerKeys >= th.cost){
+    playerKeys -= th.cost;
     saveKeys();
-    themeState.owned.push(t.id);
-    themeState.equipped = t.id;
+    themeState.owned.push(th.id);
+    themeState.equipped = th.id;
     save();
     if(!isKeycap) applyMainTheme();
     playSuccess();
-    logLine(`SATIN ALINDI: ${t.name}`,'hit');
+    logLine(`${L.purchased}: ${themeName(th)}`,'hit');
   } else {
     keyClack('wrong');
     state.shake = Math.max(state.shake, 0.15);
-    logLine(`YETERSİZ KEY: ${t.name} (${t.cost} gerekli)`,'miss');
+    logLine(`${L.insufficient}: ${themeName(th)} (${th.cost} ${L.needed})`,'miss');
   }
   updateStoreUI();
 }
@@ -1273,6 +1416,30 @@ const WORD_POOL = [
   // Duygular
   'ÖFKE','NEŞE','UMUT','MUTLU','SEVGİ','SAKİN','KORKU','HUZUR','ÜZGÜN','HEYECAN'
 ];
+const EN_WORD_POOL = [
+  'SUN','WAY','KEY','TON','GYM','LOG','RUN','TAP','JOY','LOVE','EYE','ARM','HOT','BELL','ROCK','SAND','CODE','LINK','SKIN','CHIP','TUNE','HINT','VEIN','MIND','ROOT','NOTE','READ','PILL','SOUL','SAFE','WRIT','HARD',
+  'FIRE','GLOW','FOCUS','FLOW','BEAT','FAITH','TRAIN','GATE','GEAR','SYNC','SKIN','BACK','PACE','FULL','SOLID','FLUID','HEAVY','FLUX','ZONE','TOOL','BAND','BLOCK','DATA','WORK','FORM','TEXT','FAULT','TILE','SAFE','CLAN','RACE','LINK','REST','NORM','OKAY','GAME','TALE','PLAN','SCORE','RISK','ROLE','SCORE','TEST','DATA','SHAPE',
+  'RHYTHM','BALANCE','TIMING','PULSE','SUNSET','CLOUDY','AGILE','TEMPO','BREATH','SURFACE','WAVE','SMOKE','SHADOW','LATCH','KNOT','LINE','PIECE','TUNING','SCREEN','CABLE','ORDER','MEANING','ECHO','LOOP','LIGHT','STRIKE','GROOVE','ACTIVE','ARCHIVE','SHAPE','ANSWER','DEVICE','SOLVE','VALUE','DETAIL','UPRIGHT','TRUE','FILE','EFFECT','IDEA','FOCUS','ENTRY','VIEW','PRIDE','VOLUME','TARGET','BUDGET','CELL','ACTION','RECORD','RULE','LOGIC','TEXT','MUSIC','OBJECT','SPACE','PANEL','PROJECT','ROBOT','ART','LIMIT','WEAPON','TABLE','THEME','THEORY','EXPERT','UNIT','VIDEO','LEVEL','ISSUE','REVIEW','GROUND',
+  'SUCCESS','MEMORY','GAMEPLAY','ATTENTION','LEGEND','ENERGY','KEYBOARD','STRENGTH','AMOUNT','SYSTEM','DRIVER','VIOLENCE','SOFTWARE','GROWTH','COMPUTING','SKILL','CURRENT','PHRASE','METHOD','MOTION','DOWNWARD','UPWARD','SILENT','IMAGE',
+
+  // Everyday objects
+  'TEA','SHELF','MOUSE','DESK','RUG','CLOCK','CHARGER','BAG','CLOSET','CURTAIN','PENCIL','ERASER','PILLOW','SOFA','WALLET','NOTEBOOK','RULER','KEYRING','UMBRELLA','GLASSES','CHAIR','SHOE',
+
+  // Electronics / tech
+  'PHONE','HEADSET','CAMERA','PRINTER','MODEM','MICROPHONE','SPEAKER','PIXEL','SENSOR','APP',
+
+  // Food & drink
+  'HONEY','MILK','BANANA','APPLE','COFFEE','BREAD','PLATE','FORK','SPOON','KNIFE','OVEN','KITCHEN','CHEESE','OLIVE','GLASS','POT','CHOCOLATE',
+
+  // Body
+  'KNEE','HAIR','BROW','SHOULDER','FOOT','NOSE','LIP','WRIST','EAR','FINGER','ELBOW','LASH',
+
+  // Nature
+  'MOUNTAIN','SNOW','OCEAN','FOREST','RIVER','LEAF','FLOWER','SOIL','STAR','RAIN','WIND','SKY',
+
+  // Emotions
+  'ANGER','JOY','HOPE','HAPPY','LOVE','CALM','FEAR','PEACE','SAD','THRILL'
+];
 const MS_PER_LETTER = 620;
 let word = null;
 let settingsWord = null;
@@ -1280,7 +1447,7 @@ let storeWord = null;
 let nextSpawnAt = performance.now()+600;
 
 function spawnMenuWord(){
-  const letters = ['O','Y','N','A'];
+  const letters = t().menuWord.slice();
   word = {
     letters, index:0,
     spawnedAt:performance.now(),
@@ -1298,7 +1465,7 @@ function spawnMenuWord(){
 }
 
 function spawnSettingsMenuWord(){
-  const letters = ['A','Y','A','R','L','A','R'];
+  const letters = t().settingsWord.slice();
   settingsWord = {
     letters, index:0,
     spawnedAt:performance.now(),
@@ -1316,7 +1483,7 @@ function spawnSettingsMenuWord(){
 }
 
 function spawnStoreMenuWord(){
-  const letters = ['M','A','Ğ','A','Z','A'];
+  const letters = t().storeWord.slice();
   storeWord = {
     letters, index:0,
     spawnedAt:performance.now(),
@@ -1334,7 +1501,8 @@ function spawnStoreMenuWord(){
 }
 
 function spawnWord(){
-  const raw = WORD_POOL[Math.floor(Math.random()*WORD_POOL.length)];
+  const pool = lang === 'en' ? EN_WORD_POOL : WORD_POOL;
+  const raw = pool[Math.floor(Math.random()*pool.length)];
   const letters = raw.split('');
   word = {
     letters, index:0,
@@ -1415,7 +1583,7 @@ function completeWord(){
       type: Math.random()>0.5?'gold':'cream'
     });
   }
-  logLine(`TAMAM  '${word.letters.join('')}'  +combo ${state.combo}`,'hit');
+  logLine(`${t().done}  '${word.letters.join('')}'  +combo ${state.combo}`,'hit');
   updateHud();
   word=null; nextSpawnAt=performance.now()+480;
 }
@@ -1441,7 +1609,7 @@ function missWord(reason){
   state.glitch=0.2; state.shake=0.25;
   state.targetTempo=Math.max(0.7,state.tempo-0.1);
   state.frozenUntil=performance.now()+220;
-  logLine(`KACTI  '${word.letters.join('')}'  (${reason})`,'miss');
+  logLine(`${t().missed}  '${word.letters.join('')}'  (${reason})`,'miss');
   updateHud();
   word=null; nextSpawnAt=performance.now()+650;
 }
@@ -1505,21 +1673,22 @@ function beginPlaying(mode) {
     });
   }
   logEl.innerHTML='';
-  logLine(`MOD: ${mode} -- BAŞLIYOR`, 'hit');
+  logLine(`${lang==='en'?'MODE':'MOD'}: ${t().modeTitle[mode]||mode} -- ${t().modStarting}`, 'hit');
   word=null; nextSpawnAt=performance.now()+500;
 }
 
 function updateModeRecordsUI(){
+  const L = t();
   ['SERBEST','NORMAL','ACIMASIZ'].forEach(mode=>{
     const r = getModeRecord(mode);
     const el = document.getElementById('rec-'+mode);
     if(!el) return;
     if(r.bestWords===0){
-      el.textContent = 'Henüz kayıt yok';
+      el.textContent = L.noRecord;
     } else if(mode==='SERBEST'){
-      el.textContent = `EN İYİ: ${r.bestWords} kelime`;
+      el.textContent = `${L.best}: ${r.bestWords} ${L.wordsUnit}`;
     } else {
-      el.textContent = `EN İYİ: ${r.bestCombo} kombo · ${r.bestWords} kelime`;
+      el.textContent = `${L.best}: ${r.bestCombo} ${L.comboUnit} · ${r.bestWords} ${L.wordsUnit}`;
     }
   });
 }
@@ -1528,7 +1697,7 @@ function statCardHtml(label, val, isRecord){
   return `<div class="stat-card${isRecord?' is-record':''}">
     <div class="stat-label">${label}</div>
     <div class="stat-val">${val}</div>
-    ${isRecord?'<div class="stat-badge">★ YENİ REKOR</div>':''}
+    ${isRecord?`<div class="stat-badge">${t().newRecordBadge}</div>`:''}
   </div>`;
 }
 
@@ -1543,20 +1712,20 @@ function showSessionSummary(reason, isFail){
   document.body.classList.add('game-over');
 
   const titleColor = isFail ? '#c45c4a' : '#e8e2d8';
-  const title = isFail ? 'OYUN BİTTİ' : 'OTURUM TAMAMLANDI';
+  const title = isFail ? t().gameOverTitle : t().sessionDoneTitle;
 
   const menuUi = document.getElementById('menu-ui');
   menuUi.style.opacity = '1';
   menuUi.innerHTML = `
     <h1 style="color:${titleColor}; font-size:36px; letter-spacing:6px;">${title}</h1>
-    <p style="font-size:13px;">${reason || ''}${anyRecord ? '  —  YENİ REKOR KIRDIN!' : ''}</p>
+    <p style="font-size:13px;">${reason || ''}${anyRecord ? '  —  '+t().newRecordSuffix : ''}</p>
     <div class="summary-stats">
-      ${statCardHtml('KELİME', stats.words, isNew.words)}
-      ${statCardHtml('KOMBO', stats.combo, isNew.combo)}
-      ${statCardHtml('İSABET', stats.acc+'%', isNew.acc)}
-      ${statCardHtml('DK/KEL', stats.wpm, isNew.wpm)}
+      ${statCardHtml(t().statWords, stats.words, isNew.words)}
+      ${statCardHtml(t().statCombo, stats.combo, isNew.combo)}
+      ${statCardHtml(t().statAcc, stats.acc+'%', isNew.acc)}
+      ${statCardHtml(t().statWpm, stats.wpm, isNew.wpm)}
     </div>
-    <p style="margin-top:24px; color:#d4a855; font-size:12px; letter-spacing:2px;">MENÜYE DÖNMEK İÇİN <span style="color:#fff; font-weight:800; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">SPACE</span> BAS</p>
+    <p style="margin-top:24px; color:#d4a855; font-size:12px; letter-spacing:2px;">${t().backToMenuPrefix} <span style="color:#fff; font-weight:800; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">SPACE</span> ${t().backToMenuSuffix}</p>
   `;
   logLine(`${title}: ${reason||''}`, isFail?'miss':'hit');
 }
@@ -1591,7 +1760,7 @@ window.addEventListener('keydown',(e)=>{
       document.body.classList.remove('paused');
       const hasProgress = (state.wordsCompleted + state.wordsMissed) > 0;
       if (hasProgress) {
-        showSessionSummary('OTURUM ÖZETİ', false);
+        showSessionSummary(t().sessionSummaryReason, false);
         return;
       }
       gameState = 'MENU';
@@ -1599,7 +1768,7 @@ window.addEventListener('keydown',(e)=>{
       document.getElementById('menu-ui').style.opacity = '1';
       document.getElementById('menu-ui').innerHTML = `
         <h1>KEYBOUND</h1>
-        <p>OYNA, MAĞAZA ya da AYARLAR YAZ</p>
+        <p id="menu-subtitle">${t().menuSubtitle}</p>
         <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
       `;
       updateKeyHud();
@@ -1624,6 +1793,10 @@ window.addEventListener('keydown',(e)=>{
       settings.music = !settings.music;
       setMusicVolume(settings.music);
       updateSettingsUI();
+    } else if (key === 'L') {
+      lang = (lang === 'tr') ? 'en' : 'tr';
+      saveLang();
+      applyLanguage();
     }
     return;
   }
@@ -1657,7 +1830,7 @@ window.addEventListener('keydown',(e)=>{
       document.body.classList.remove('game-over');
       document.getElementById('menu-ui').innerHTML = `
         <h1>KEYBOUND</h1>
-        <p>OYNA, MAĞAZA ya da AYARLAR YAZ</p>
+        <p id="menu-subtitle">${t().menuSubtitle}</p>
         <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
       `;
       updateKeyHud();
@@ -2242,7 +2415,8 @@ function createMenuPattern() {
     let x=0;
     while(x < cols) {
       if (Math.random() > 0.3 && x < cols - 4) {
-        const word = WORD_POOL[Math.floor(Math.random()*WORD_POOL.length)];
+        const pool = lang === 'en' ? EN_WORD_POOL : WORD_POOL;
+        const word = pool[Math.floor(Math.random()*pool.length)];
         if (x + word.length <= cols) {
           for(let i=0; i<word.length; i++) grid[y][x+i] = word[i];
           x += word.length;
@@ -2347,8 +2521,8 @@ function loop(now){
       if(word){
         const elapsed=(effectiveNow-word.spawnedAt)*state.tempo;
         if(elapsed>=word.duration) {
-          if (currentMode === 'ACIMASIZ') gameOver('SÜRE DOLDU');
-          else missWord('SÜRE DOLDU');
+          if (currentMode === 'ACIMASIZ') gameOver(t().timeUp);
+          else missWord(t().timeUp);
         }
       }
     } else if (gameState === 'MENU') {
@@ -2376,7 +2550,8 @@ requestAnimationFrame(loop);
 updateHud();
 updateKeyHud();
 applyMainTheme();
-logLine('sahne hazir -- kelimeyi bar bitmeden yaz','hit');
+applyLanguage();
+logLine(t().sceneReady,'hit');
 </script>
 </body>
 </html>
