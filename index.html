@@ -978,6 +978,12 @@ function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, box)
   const bounceOff = Math.sin(bounce*Math.PI)*-8;
   const pal = KEYCAP_PALETTES[status];
 
+  // Slight "viewed from the left" perspective: the raised top face
+  // leans toward the camera (left) relative to its base, proportional
+  // to how high the cap currently sits.
+  const PERSPECTIVE_X = 0.9;
+  const skewX = -currentDepth * PERSPECTIVE_X;
+
   ctx.save();
   ctx.translate(cx, cy + bounceOff);
 
@@ -986,7 +992,7 @@ function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, box)
   ctx.fillStyle=`rgba(0,0,0,${shA*0.4})`;
   ctx.beginPath(); ctx.ellipse(0,h/2+10,w*0.52,6,0,0,Math.PI*2); ctx.fill();
   ctx.fillStyle=`rgba(0,0,0,${shA})`;
-  ctx.beginPath(); ctx.ellipse(0,h/2+7,w*0.44,4,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(2,h/2+7,w*0.44,4,0,0,Math.PI*2); ctx.fill();
 
   const topY = -h/2 - currentDepth;
 
@@ -995,41 +1001,58 @@ function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, box)
   ctx.fillStyle='#1a1614';
   ctx.fill();
 
-  // ── Side walls ──
+  // ── Side walls (slanted to match the perspective shift) ──
   const wallH = currentDepth + 3;
   const wallY = topY + h - 1;
 
-  // Left wall
   ctx.beginPath();
-  ctx.moveTo(-w/2, wallY+r); ctx.lineTo(-w/2, wallY+wallH);
+  ctx.moveTo(-w/2+skewX, wallY+r); ctx.lineTo(-w/2, wallY+wallH);
   ctx.arcTo(-w/2, wallY+wallH+3, -w/2+r, wallY+wallH+3, 3);
   ctx.lineTo(w/2-r, wallY+wallH+3);
   ctx.arcTo(w/2, wallY+wallH+3, w/2, wallY+wallH, 3);
-  ctx.lineTo(w/2, wallY+r);
+  ctx.lineTo(w/2+skewX, wallY+r);
   ctx.closePath();
-  let wGrad = ctx.createLinearGradient(0,wallY,0,wallY+wallH);
+  let wGrad = ctx.createLinearGradient(-w/2,wallY,w/2,wallY+wallH);
   wGrad.addColorStop(0, pal.wallHi);
+  wGrad.addColorStop(0.55, pal.wallLo);
   wGrad.addColorStop(1, pal.wallLo);
   ctx.fillStyle = wGrad;
   ctx.fill();
 
-  // Wall left edge highlight
-  ctx.save();
+  // ── Left side face -- a real slanted plastic face catching the light ──
   ctx.beginPath();
-  ctx.rect(-w/2, wallY, 3, wallH);
-  ctx.clip();
-  ctx.fillStyle='rgba(255,255,255,0.06)';
-  ctx.fillRect(-w/2,wallY,3,wallH);
-  ctx.restore();
+  ctx.moveTo(-w/2+skewX, topY+2);
+  ctx.lineTo(-w/2+skewX, wallY+r);
+  ctx.lineTo(-w/2, wallY+wallH);
+  ctx.lineTo(-w/2, -h/2+2);
+  ctx.closePath();
+  let lFaceGrad = ctx.createLinearGradient(-w/2+skewX,0,-w/2,0);
+  lFaceGrad.addColorStop(0, pal.wallHi);
+  lFaceGrad.addColorStop(1, 'rgba(255,255,255,0.22)');
+  ctx.fillStyle = lFaceGrad;
+  ctx.fill();
 
-  // Wall right edge shadow
-  ctx.save();
+  // ── Right side face -- turns away from the viewer, stays in shadow ──
   ctx.beginPath();
-  ctx.rect(w/2-3, wallY, 3, wallH);
-  ctx.clip();
-  ctx.fillStyle='rgba(0,0,0,0.08)';
-  ctx.fillRect(w/2-3,wallY,3,wallH);
-  ctx.restore();
+  ctx.moveTo(w/2+skewX, topY+2);
+  ctx.lineTo(w/2+skewX, wallY+r);
+  ctx.lineTo(w/2, wallY+wallH);
+  ctx.lineTo(w/2, -h/2+2);
+  ctx.closePath();
+  let rFaceGrad = ctx.createLinearGradient(w/2+skewX,0,w/2,0);
+  rFaceGrad.addColorStop(0, pal.wallLo);
+  rFaceGrad.addColorStop(1, 'rgba(0,0,0,0.32)');
+  ctx.fillStyle = rFaceGrad;
+  ctx.fill();
+
+  // Everything above this point belongs to the raised top face, so it
+  // gets shifted sideways -- and very slightly squashed for foreshortening --
+  // together, to sell the perspective.
+  ctx.save();
+  ctx.translate(skewX, 0);
+  ctx.translate(0, topY+h/2);
+  ctx.scale(1, 0.94);
+  ctx.translate(0, -(topY+h/2));
 
   // ── Top face ──
   roundRect(-w/2, topY, w, h, r);
@@ -1127,6 +1150,7 @@ function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, box)
   }
   ctx.fillText(label, 0, lY);
 
+  ctx.restore(); // closes the top-face perspective translate
   ctx.restore();
 }
 
