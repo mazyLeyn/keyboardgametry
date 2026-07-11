@@ -259,41 +259,78 @@
   #store-ui {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
-    background: rgba(20,15,12,0.85); backdrop-filter: blur(10px);
+    background: radial-gradient(circle at 50% 20%, rgba(60,48,34,0.55), rgba(20,15,12,0.92) 70%);
+    backdrop-filter: blur(10px);
     opacity: 0; pointer-events: none; z-index: 30;
     transition: opacity 0.3s ease;
   }
   .store-active #store-ui { opacity: 1; pointer-events: auto; }
   #store-ui h2 {
-    color: #e8e2d8; font-size: 42px; letter-spacing: 8px; margin-bottom: 14px;
+    color: #e8e2d8; font-size: 40px; letter-spacing: 8px; margin-bottom: 4px;
     text-shadow: 0 4px 16px rgba(0,0,0,0.6);
   }
+  .store-subtitle{
+    color:rgba(210,195,180,0.4); font-family:'JetBrains Mono', monospace;
+    font-size:11px; letter-spacing:3px; margin-bottom:18px; text-transform:uppercase;
+  }
   .store-key-balance{
-    color:rgba(210,195,180,0.75); font-family:'JetBrains Mono', monospace;
-    font-size:13px; letter-spacing:2px; margin-bottom:26px;
+    display:flex; align-items:center; gap:8px;
+    background:linear-gradient(135deg, rgba(212,168,85,0.16), rgba(212,168,85,0.04));
+    border:1px solid rgba(212,168,85,0.35); border-radius:999px;
+    padding:8px 20px; margin-bottom:24px;
+    color:rgba(232,222,216,0.85); font-family:'JetBrains Mono', monospace;
+    font-size:13px; letter-spacing:1.5px; box-shadow:0 4px 14px rgba(0,0,0,0.25);
   }
-  .store-key-balance span{ color:#e8c76f; font-weight:700; }
-  .store-tabs{ display:flex; gap:10px; margin-bottom:22px; }
+  .store-key-balance .coin{
+    width:16px; height:16px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #f6da8e, #d4a855 55%, #a97f34 100%);
+    box-shadow:0 0 6px rgba(212,168,85,0.6); flex-shrink:0;
+  }
+  .store-key-balance span{ color:#e8c76f; font-weight:800; font-size:15px; }
+  .store-tabs{ display:flex; gap:8px; margin-bottom:24px; background:rgba(0,0,0,0.2); padding:5px; border-radius:12px; }
   .store-tab{
-    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700;
-    letter-spacing:2px; color:rgba(210,195,180,0.5); padding:9px 20px;
-    border:1px solid rgba(255,255,255,0.1); border-radius:8px; cursor:pointer;
-    background:rgba(255,255,255,0.03); transition: all 0.2s ease;
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700;
+    letter-spacing:1.8px; color:rgba(210,195,180,0.5); padding:10px 18px;
+    border:1px solid transparent; border-radius:8px; cursor:pointer;
+    background:transparent; transition: all 0.2s ease;
+    display:flex; align-items:center; gap:7px;
   }
-  .store-tab:hover{ color:rgba(210,195,180,0.85); border-color:rgba(255,255,255,0.2); }
-  .store-tab.active{ color:#1a1614; background:#d4a855; border-color:#d4a855; }
-  .store-grid{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; max-width:760px; margin-bottom:26px; }
+  .store-tab .tab-icon{ font-size:13px; opacity:0.8; }
+  .store-tab:hover{ color:rgba(210,195,180,0.9); background:rgba(255,255,255,0.05); }
+  .store-tab.active{
+    color:#1a1614; background:#d4a855; border-color:#d4a855;
+    box-shadow:0 3px 10px rgba(212,168,85,0.35);
+  }
+  .store-grid{
+    display:grid; grid-template-columns:repeat(3, 152px); gap:16px;
+    justify-content:center; max-width:780px; margin-bottom:22px;
+    max-height:280px; overflow-y:auto; padding:4px 4px 8px;
+  }
   .store-card{
-    position:relative; width:150px; padding:22px 16px 16px;
-    background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
-    border-radius:12px; text-align:center; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    position:relative; padding:24px 14px 16px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    border:1px solid rgba(255,255,255,0.1); border-radius:14px; text-align:center;
+    display:flex; flex-direction:column; align-items:center;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
   }
-  .store-card.equipped{ border-color:#d4a855; box-shadow:0 0 16px rgba(212,168,85,0.25); }
+  .store-card:hover{ transform:translateY(-2px); border-color:rgba(255,255,255,0.22); }
+  .store-card.equipped{
+    border-color:#d4a855; box-shadow:0 0 18px rgba(212,168,85,0.3);
+    background: linear-gradient(160deg, rgba(212,168,85,0.14), rgba(255,255,255,0.02));
+  }
+  .store-card.locked{ opacity:0.68; }
+  .store-card.locked:hover{ transform:none; border-color:rgba(255,255,255,0.1); }
   .store-key-badge{
     position:absolute; top:10px; left:10px; width:22px; height:22px; border-radius:50%;
-    background:#d4a855; color:#1a1614; font-weight:800; font-size:12px;
+    background:rgba(255,255,255,0.1); color:rgba(232,222,216,0.8); font-weight:800; font-size:11px;
     display:flex; align-items:center; justify-content:center;
-    font-family:'JetBrains Mono', monospace; box-shadow:0 3px 0 #b0a898;
+    font-family:'JetBrains Mono', monospace; border:1px solid rgba(255,255,255,0.15);
+  }
+  .store-ribbon{
+    position:absolute; top:10px; right:10px;
+    background:#d4a855; color:#1a1614; font-size:12px; line-height:1;
+    width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 6px rgba(0,0,0,0.35);
   }
   .store-swatch{
     width:64px; height:46px; border-radius:7px; margin:0 auto 14px;
@@ -311,13 +348,22 @@
       linear-gradient(135deg,#2b2934,#100f14);
     border:1px dashed rgba(230,196,140,0.45);
   }
-  .store-card h4{ color:#e8e2d8; font-size:13px; letter-spacing:2px; margin-bottom:10px; }
+  .store-card h4{ color:#e8e2d8; font-size:12.5px; letter-spacing:1.5px; margin-bottom:10px; }
   .store-status{
     font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:1px;
     color:#d4a855; font-weight:700;
+    display:flex; align-items:center; gap:5px;
   }
   .store-status.owned{ color:#8aad7a; }
   .store-status.locked{ color:rgba(210,195,180,0.5); }
+  .store-footer-hint{
+    display:flex; gap:24px; color:rgba(210,195,180,0.4);
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:1.5px;
+  }
+  .store-footer-hint .key{
+    display:inline-block; background:rgba(255,255,255,0.08); color:rgba(232,222,216,0.75);
+    padding:3px 8px; border-radius:5px; margin-right:6px; font-weight:700;
+  }
 </style>
 </head>
 <body>
@@ -325,7 +371,7 @@
   <canvas id="c"></canvas>
   <div id="menu-ui">
     <h1>KEYBOUND</h1>
-    <p>OYNA, AYARLAR ya da MAĞAZA YAZ</p>
+    <p>OYNA, MAĞAZA ya da AYARLAR YAZ</p>
     <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
   </div>
   <div id="mode-select-ui">
@@ -369,17 +415,18 @@
   </div>
   <div id="store-ui">
     <h2>MAĞAZA</h2>
-    <div class="store-key-balance">SAHİP OLDUĞUN KEY: <span id="store-key-count">0</span></div>
+    <div class="store-subtitle">görünümünü kişiselleştir</div>
+    <div class="store-key-balance"><span class="coin"></span>SAHİP OLDUĞUN KEY: <span id="store-key-count">0</span></div>
     <div class="store-tabs">
-      <div class="store-tab active" data-tab="keycap" onclick="switchStoreTab('keycap')">TUŞ TAKIMI</div>
-      <div class="store-tab" data-tab="main" onclick="switchStoreTab('main')">ARKA PLAN</div>
-      <div class="store-tab" data-tab="special" onclick="switchStoreTab('special')">KEYBOARD</div>
+      <div class="store-tab active" data-tab="keycap" onclick="switchStoreTab('keycap')"><span class="tab-icon">⌨</span>TUŞ TAKIMI</div>
+      <div class="store-tab" data-tab="main" onclick="switchStoreTab('main')"><span class="tab-icon">◐</span>ARKA PLAN</div>
+      <div class="store-tab" data-tab="special" onclick="switchStoreTab('special')"><span class="tab-icon">✦</span>KEYBOARD</div>
     </div>
     <div class="store-grid" id="store-grid"></div>
-    <div class="pause-options">
-      <div class="pause-item"><span class="key">TAB</span> KATEGORİ DEĞİŞTİR</div>
-      <div class="pause-item"><span class="key">1-6</span> SATIN AL / KUŞAN</div>
-      <div class="pause-item"><span class="key">ESC</span> MENÜYE DÖN</div>
+    <div class="store-footer-hint">
+      <div><span class="key">TAB</span>KATEGORİ DEĞİŞTİR</div>
+      <div><span class="key">1-6</span>SATIN AL / KUŞAN</div>
+      <div><span class="key">ESC</span>MENÜYE DÖN</div>
     </div>
   </div>
   <div id="hud">
@@ -802,12 +849,13 @@ function updateStoreUI(){
     else if(isSpecialTab) equipped = (isKeycap ? specialShopState.equippedKeycap === t.id : specialShopState.equippedMain === t.id);
     else equipped = themeState.equipped === t.id;
     let statusHtml;
-    if(equipped) statusHtml = `<div class="store-status owned">KUŞANILDI</div>`;
+    if(equipped) statusHtml = `<div class="store-status owned">✓ KUŞANILDI</div>`;
     else if(owned) statusHtml = `<div class="store-status owned">KUŞAN</div>`;
-    else statusHtml = `<div class="store-status">${t.cost} KEY</div>`;
+    else statusHtml = `<div class="store-status locked">🔒 ${t.cost} <span class="coin" style="width:10px;height:10px;display:inline-block;"></span></div>`;
     const swatchStyle = (t.animated || t.mousepad) ? '' : `style="background:linear-gradient(135deg, ${themeSwatchColors(t,isKeycap)[0]}, ${themeSwatchColors(t,isKeycap)[1]})"`;
-    return `<div class="store-card${equipped?' equipped':''}${t.animated?' rgb-swatch':''}${t.mousepad?' mousepad-swatch':''}">
+    return `<div class="store-card${equipped?' equipped':''}${!owned?' locked':''}${t.animated?' rgb-swatch':''}${t.mousepad?' mousepad-swatch':''}">
       <div class="store-key-badge">${i+1}</div>
+      ${equipped?'<div class="store-ribbon">✓</div>':''}
       <div class="store-swatch" ${swatchStyle}></div>
       <h4>${t.name}</h4>
       ${statusHtml}
@@ -1332,10 +1380,10 @@ function wordCenter(){
   return {x:CX, y:CY+10};
 }
 function settingsWordCenter(){
-  return {x:CX, y:CY+130};
+  return {x:CX, y:CY+250};
 }
 function storeWordCenter(){
-  return {x:CX, y:CY+250};
+  return {x:CX, y:CY+130};
 }
 
 function completeWord(){
@@ -1551,7 +1599,7 @@ window.addEventListener('keydown',(e)=>{
       document.getElementById('menu-ui').style.opacity = '1';
       document.getElementById('menu-ui').innerHTML = `
         <h1>KEYBOUND</h1>
-        <p>OYNA, AYARLAR ya da MAĞAZA YAZ</p>
+        <p>OYNA, MAĞAZA ya da AYARLAR YAZ</p>
         <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
       `;
       updateKeyHud();
@@ -1609,7 +1657,7 @@ window.addEventListener('keydown',(e)=>{
       document.body.classList.remove('game-over');
       document.getElementById('menu-ui').innerHTML = `
         <h1>KEYBOUND</h1>
-        <p>OYNA, AYARLAR ya da MAĞAZA YAZ</p>
+        <p>OYNA, MAĞAZA ya da AYARLAR YAZ</p>
         <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
       `;
       updateKeyHud();
