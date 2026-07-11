@@ -224,6 +224,7 @@
     <div class="settings-options">
       <div class="settings-item"><span class="key">S</span> SES <span class="toggle-val" id="set-sound">AÇIK</span></div>
       <div class="settings-item"><span class="key">E</span> EFEKTLER <span class="toggle-val" id="set-effects">AÇIK</span></div>
+      <div class="settings-item"><span class="key">M</span> MÜZİK <span class="toggle-val" id="set-music">AÇIK</span></div>
       <div class="settings-item"><span class="key">ESC</span> MENÜYE DÖN</div>
     </div>
   </div>
@@ -330,14 +331,17 @@ function generateEdgePath(w, h, seed) {
 }
 
 /* ── Settings ── */
-const settings = { sound: true, effects: true };
+const settings = { sound: true, effects: true, music: true };
 function updateSettingsUI(){
   const soundEl = document.getElementById('set-sound');
   const fxEl = document.getElementById('set-effects');
+  const musicEl = document.getElementById('set-music');
   soundEl.textContent = settings.sound ? 'AÇIK' : 'KAPALI';
   soundEl.classList.toggle('off', !settings.sound);
   fxEl.textContent = settings.effects ? 'AÇIK' : 'KAPALI';
   fxEl.classList.toggle('off', !settings.effects);
+  musicEl.textContent = settings.music ? 'AÇIK' : 'KAPALI';
+  musicEl.classList.toggle('off', !settings.music);
 }
 
 /* ── Audio ── */
@@ -396,6 +400,146 @@ function playSuccess(){
       o.start(s);o.stop(s+d+0.02);
     });
   }catch(e){}
+}
+
+/* ── Lofi background music ── */
+let musicStarted=false;
+let musicGain=null;
+const MUSIC_VOLUME=0.055;
+const LOFI_CHORDS=[
+  [130.81,164.81,196.00,246.94], // Cmaj7
+  [110.00,130.81,164.81,196.00], // Am7
+  [146.83,174.61,220.00,261.63], // Dm7
+  [98.00,123.47,146.83,174.61]   // G7
+];
+const BPM=78;
+const BEAT_DUR=60/BPM;
+const CHORD_DUR=BEAT_DUR*4; // one chord per 4-beat bar
+
+function setMusicVolume(on){
+  if(!musicGain) return;
+  try{
+    musicGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    musicGain.gain.setTargetAtTime(on?MUSIC_VOLUME:0, audioCtx.currentTime, 0.5);
+  }catch(e){}
+}
+
+function scheduleLofiChord(freqs, startTime, dur){
+  const filt=audioCtx.createBiquadFilter();
+  filt.type='lowpass'; filt.frequency.value=950; filt.Q.value=0.6;
+  const chordGain=audioCtx.createGain();
+  chordGain.gain.setValueAtTime(0.0001,startTime);
+  chordGain.gain.linearRampToValueAtTime(1,startTime+0.7);
+  chordGain.gain.setValueAtTime(1,startTime+dur-1.0);
+  chordGain.gain.linearRampToValueAtTime(0.0001,startTime+dur);
+  chordGain.connect(filt); filt.connect(musicGain);
+  freqs.forEach((f,i)=>{
+    const o=audioCtx.createOscillator();
+    o.type = i===0 ? 'triangle' : 'sine';
+    o.frequency.value=f;
+    o.connect(chordGain);
+    o.start(startTime); o.stop(startTime+dur+0.2);
+  });
+}
+
+/* Soft boom-bap style drum hits, kept quiet under the chords */
+function kickHit(t){
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type='sine';
+  o.frequency.setValueAtTime(72,t);
+  o.frequency.exponentialRampToValueAtTime(36,t+0.13);
+  g.gain.setValueAtTime(0.5,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+  o.connect(g); g.connect(musicGain);
+  o.start(t); o.stop(t+0.25);
+}
+function snareHit(t){
+  const src=audioCtx.createBufferSource();
+  src.buffer=getNoiseBuffer();
+  const filt=audioCtx.createBiquadFilter();
+  filt.type='bandpass'; filt.frequency.value=1500; filt.Q.value=0.7;
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(0.22,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+  src.connect(filt); filt.connect(g); g.connect(musicGain);
+  src.start(t); src.stop(t+0.15);
+
+  const o=audioCtx.createOscillator(), og=audioCtx.createGain();
+  o.type='triangle'; o.frequency.value=185;
+  og.gain.setValueAtTime(0.12,t);
+  og.gain.exponentialRampToValueAtTime(0.0001,t+0.07);
+  o.connect(og); og.connect(musicGain);
+  o.start(t); o.stop(t+0.08);
+}
+function hihatHit(t,vel){
+  const src=audioCtx.createBufferSource();
+  src.buffer=getNoiseBuffer();
+  const filt=audioCtx.createBiquadFilter();
+  filt.type='highpass'; filt.frequency.value=7500;
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(0.09*vel,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.035);
+  src.connect(filt); filt.connect(g); g.connect(musicGain);
+  src.start(t); src.stop(t+0.04);
+}
+function scheduleDrumBar(barStart){
+  const eighth=BEAT_DUR/2;
+  const swing=eighth*0.16;
+  kickHit(barStart);
+  kickHit(barStart+2*BEAT_DUR+eighth*0.5);
+  snareHit(barStart+1*BEAT_DUR);
+  snareHit(barStart+3*BEAT_DUR);
+  for(let i=0;i<8;i++){
+    const time=barStart+i*eighth+(i%2===1?swing:0);
+    hihatHit(time, i%2===0?1:0.55);
+  }
+}
+
+let lofiTimer=null;
+function scheduleLofiBar(startTime){
+  LOFI_CHORDS.forEach((chord,i)=>{
+    const barStart=startTime+i*CHORD_DUR;
+    scheduleDrumBar(barStart);
+  });
+  const totalDur=LOFI_CHORDS.length*CHORD_DUR;
+  lofiTimer=setTimeout(()=>{
+    if(musicStarted) scheduleLofiBar(audioCtx.currentTime+0.05);
+  }, (totalDur-0.3)*1000);
+}
+
+let vinylBuffer=null;
+function getVinylBuffer(){
+  if(vinylBuffer) return vinylBuffer;
+  const dur=2.5;
+  const sz=Math.floor(audioCtx.sampleRate*dur);
+  vinylBuffer=audioCtx.createBuffer(1,sz,audioCtx.sampleRate);
+  const d=vinylBuffer.getChannelData(0);
+  for(let i=0;i<sz;i++){
+    d[i]=(Math.random()*2-1) * (Math.random()<0.0015 ? 0.9 : 0.12);
+  }
+  return vinylBuffer;
+}
+function startVinylCrackle(){
+  const src=audioCtx.createBufferSource();
+  src.buffer=getVinylBuffer();
+  src.loop=true;
+  const filt=audioCtx.createBiquadFilter();
+  filt.type='highpass'; filt.frequency.value=1600;
+  const g=audioCtx.createGain();
+  g.gain.value=0.18;
+  src.connect(filt); filt.connect(g); g.connect(musicGain);
+  src.start();
+}
+
+function startMusic(){
+  if(musicStarted) return;
+  musicStarted=true;
+  ensureAudio();
+  musicGain=audioCtx.createGain();
+  musicGain.gain.value = settings.music ? MUSIC_VOLUME : 0;
+  musicGain.connect(audioCtx.destination);
+  scheduleLofiBar(audioCtx.currentTime+0.2);
+  // vinyl crackle disabled
 }
 
 /* ── State ── */
@@ -600,6 +744,7 @@ function gameOver(reason) {
 }
 
 window.addEventListener('keydown',(e)=>{
+  if(!musicStarted) startMusic();
   if (e.key === 'Escape') {
     if (gameState === 'PLAYING') {
       gameState = 'PAUSED';
@@ -645,6 +790,10 @@ window.addEventListener('keydown',(e)=>{
       updateSettingsUI();
     } else if (key === 'E') {
       settings.effects = !settings.effects;
+      updateSettingsUI();
+    } else if (key === 'M') {
+      settings.music = !settings.music;
+      setMusicVolume(settings.music);
       updateSettingsUI();
     }
     return;
