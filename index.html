@@ -5,7 +5,2171 @@
 <title>KEYBOUND</title>
 <meta name="description" content="Retro mekanik klavye yazma oyunu">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>KEYBOUND</title>
+<meta name="description" content="Retro mekanik klavye yazma oyunu">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    height:100%; overflow:hidden;
+    font-family:'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  body{ background:#2c2420; }
+  #stage{ position:relative; width:100%; height:100vh; }
+  #stage::after {
+    content: ""; position: absolute; top:0; left:0; right:0; bottom:0; pointer-events: none;
+    background: radial-gradient(circle at center, rgba(0,0,0,0) 35%, rgba(15,10,8,0.65) 85%, rgba(0,0,0,0.9) 100%);
+    z-index: 5;
+  }
+  canvas{ position:absolute; top:0; left:0; display:block; }
+
+  #hud{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:16px 28px; pointer-events:none; z-index:10;
+  }
+  .hud-box{
+    background: rgba(44,36,32,0.85);
+    backdrop-filter: blur(8px);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:8px;
+    padding:7px 16px;
+    color:rgba(210,195,180,0.6);
+    font-size:11px; font-weight:600;
+    letter-spacing:1.8px; text-transform:uppercase;
+    font-family:'JetBrains Mono', monospace;
+  }
+  .hud-box .value{color:#d4a855; margin-left:6px;}
+  .hud-title{
+    color:rgba(210,195,180,0.4);
+    font-size:11px; letter-spacing:3px; font-weight:500;
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  #combo-wrap{
+    position:absolute; top:70px; left:50%; transform:translateX(-50%);
+    pointer-events:none; text-align:center; z-index:10;
+  }
+  #combo{
+    font-size:13px; font-weight:700; letter-spacing:3px;
+    font-family:'JetBrains Mono', monospace;
+    color:#d4a855; text-shadow:0 0 12px rgba(212,168,85,0.3);
+    transition: transform 0.12s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #combo.pop{ transform:scale(1.25); }
+
+  #streak{
+    position:absolute; top:96px; left:50%; transform:translateX(-50%);
+    pointer-events:none; font-size:10px;
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:2px; font-weight:700;
+    color:#c45c4a; text-shadow:0 0 10px rgba(196,92,74,0.3);
+    opacity:0; transition:opacity 0.3s ease; z-index:10;
+  }
+  #streak.show{opacity:1;}
+
+  #log{
+    position:absolute; bottom:56px; left:28px;
+    color:rgba(210,195,180,0.35); font-size:11px; line-height:1.8;
+    max-height:120px; overflow:hidden; pointer-events:none;
+    font-family:'JetBrains Mono', monospace; z-index:10;
+  }
+  #log div{ opacity:0; animation:logIn 0.25s ease forwards; }
+  @keyframes logIn{
+    from{opacity:0;transform:translateY(6px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  #log span.hit{color:#8aad7a;}
+  #log span.miss{color:#c45c4a;}
+
+  #footer{
+    position:absolute; bottom:20px; left:0; right:0;
+    text-align:center; font-size:11px;
+    pointer-events:none; font-weight:500;
+    color:rgba(210,195,180,0.25);
+    letter-spacing:1.5px;
+    font-family:'JetBrains Mono', monospace; z-index:10;
+  }
+
+  /* Main Menu UI */
+  #menu-ui{
+    position:absolute; top:25%; left:0; right:0;
+    text-align:center; pointer-events:none; z-index:20;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  #menu-ui h1 {
+    color:#e8e2d8;
+    font-size:48px; letter-spacing:10px;
+    font-weight:900; margin-bottom:16px;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+  #menu-ui p {
+    color:rgba(210,195,180,0.6);
+    font-size:14px; letter-spacing:4px;
+    font-family:'JetBrains Mono', monospace;
+  }
+  
+  .playing #menu-ui { opacity: 0; transform: translateY(-20px); }
+
+  /* Session Summary */
+  .summary-stats{
+    display:flex; gap:14px; justify-content:center; margin-top:22px;
+    pointer-events:none; flex-wrap:wrap; padding:0 20px;
+  }
+  .stat-card{
+    background: rgba(26,20,18,0.6); border:1px solid rgba(255,255,255,0.06);
+    border-radius:10px; padding:12px 18px; min-width:92px;
+    backdrop-filter: blur(6px);
+  }
+  .stat-card .stat-label{
+    font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:1.5px;
+    color:rgba(210,195,180,0.45); text-transform:uppercase;
+  }
+  .stat-card .stat-val{
+    font-family:'JetBrains Mono', monospace; font-size:22px; font-weight:700;
+    color:#e8e2d8; margin-top:4px;
+  }
+  .stat-card.is-record{ border-color:rgba(212,168,85,0.5); box-shadow:0 0 16px rgba(212,168,85,0.15); }
+  .stat-card.is-record .stat-val{ color:#d4a855; }
+  .stat-card .stat-badge{
+    font-family:'JetBrains Mono', monospace; font-size:8.5px; letter-spacing:1px;
+    color:#d4a855; margin-top:3px; opacity:0.9;
+  }
+  
+  /* Mode Select UI */
+  #mode-select-ui {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: center; align-items: center; gap: 30px;
+    opacity: 0; pointer-events: none; z-index: 25;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    transform: translateY(20px);
+  }
+  .mode-select-active #mode-select-ui {
+    opacity: 1; transform: translateY(0); pointer-events: auto;
+  }
+  .mode-card {
+    background: rgba(26,20,18,0.7); border: 1px solid rgba(255,255,255,0.05);
+    padding: 40px 25px; border-radius: 16px; text-align: center; width: 280px;
+    backdrop-filter: blur(12px); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .mode-key {
+    display: inline-block; background: #e8e2d8; color: #3a3530;
+    font-size: 32px; font-weight: 900; padding: 12px 28px; border-radius: 10px;
+    box-shadow: 0 6px 0 #b0a898, 0 10px 20px rgba(0,0,0,0.4);
+    margin-bottom: 25px; font-family: 'Inter', sans-serif;
+  }
+  .mode-card h3 { color: #d4a855; margin-bottom: 15px; font-size: 22px; letter-spacing: 3px;}
+  .mode-card p { color: rgba(210,195,180,0.6); font-size: 13px; line-height: 1.6; font-family:'JetBrains Mono', monospace;}
+  .mode-card .mode-record {
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);
+    font-family:'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    color: rgba(212,168,85,0.75);
+  }
+
+  /* Pause UI */
+  #pause-ui {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    background: rgba(20,15,12,0.85); backdrop-filter: blur(10px);
+    opacity: 0; pointer-events: none; z-index: 30;
+    transition: opacity 0.3s ease;
+  }
+  .paused #pause-ui { opacity: 1; pointer-events: auto; }
+  #pause-ui h2 { color: #e8e2d8; font-size: 42px; letter-spacing: 8px; margin-bottom: 40px; text-shadow: 0 4px 16px rgba(0,0,0,0.6); }
+  .pause-options { display: flex; gap: 30px; }
+  .pause-item { 
+    background: rgba(255,255,255,0.05); padding: 15px 25px; border-radius: 12px;
+    color: rgba(210,195,180,0.8); font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center;
+  }
+  .pause-item .key { 
+    display: inline-block; background: #d4a855; color: #1a1614; font-weight: 800;
+    padding: 6px 12px; border-radius: 6px; margin-right: 15px; box-shadow: 0 4px 0 #b0a898;
+  }
+
+  #hud, #combo-wrap, #streak, #log, #footer { opacity: 0; transition: opacity 0.5s ease; }
+  .playing #hud, .playing #combo-wrap, .playing #streak, .playing #log, .playing #footer { opacity: 1; }
+
+  /* Settings UI */
+  #settings-ui {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    background: rgba(20,15,12,0.85); backdrop-filter: blur(10px);
+    opacity: 0; pointer-events: none; z-index: 30;
+    transition: opacity 0.3s ease;
+  }
+  .settings-active #settings-ui { opacity: 1; pointer-events: auto; }
+  #settings-ui h2 {
+    color: #e8e2d8; font-size: 42px; letter-spacing: 8px; margin-bottom: 40px;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  }
+  .settings-options { display: flex; flex-direction: column; gap: 16px; }
+  .settings-item {
+    background: rgba(255,255,255,0.05); padding: 15px 25px; border-radius: 12px;
+    color: rgba(210,195,180,0.8); font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center;
+    min-width: 320px; letter-spacing: 1px;
+  }
+  .settings-item .key {
+    display: inline-block; background: #d4a855; color: #1a1614; font-weight: 800;
+    padding: 6px 12px; border-radius: 6px; margin-right: 15px; box-shadow: 0 4px 0 #b0a898;
+  }
+  .settings-item .toggle-val { margin-left: auto; color: #8aad7a; font-weight: 700; }
+  .settings-item .toggle-val.off { color: #c45c4a; }
+
+  /* Key currency HUD */
+  .hud-left{ display:flex; gap:10px; }
+  .hud-box .value.key-value{ color:#e8c76f; }
+
+  /* Menu key balance */
+  #menu-ui p.menu-key-balance{
+    margin-top:12px; color:#d4a855; font-size:12px; letter-spacing:3px;
+    font-family:'JetBrains Mono', monospace; text-transform:uppercase;
+  }
+
+  /* Store UI */
+  #store-ui {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    background: rgba(20,15,12,0.85); backdrop-filter: blur(10px);
+    opacity: 0; pointer-events: none; z-index: 30;
+    transition: opacity 0.3s ease;
+  }
+  .store-active #store-ui { opacity: 1; pointer-events: auto; }
+  #store-ui h2 {
+    color: #e8e2d8; font-size: 42px; letter-spacing: 8px; margin-bottom: 14px;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  }
+  .store-key-balance{
+    color:rgba(210,195,180,0.75); font-family:'JetBrains Mono', monospace;
+    font-size:13px; letter-spacing:2px; margin-bottom:26px;
+  }
+  .store-key-balance span{ color:#e8c76f; font-weight:700; }
+  .store-tabs{ display:flex; gap:10px; margin-bottom:22px; }
+  .store-tab{
+    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700;
+    letter-spacing:2px; color:rgba(210,195,180,0.5); padding:9px 20px;
+    border:1px solid rgba(255,255,255,0.1); border-radius:8px; cursor:pointer;
+    background:rgba(255,255,255,0.03); transition: all 0.2s ease;
+  }
+  .store-tab:hover{ color:rgba(210,195,180,0.85); border-color:rgba(255,255,255,0.2); }
+  .store-tab.active{ color:#1a1614; background:#d4a855; border-color:#d4a855; }
+  .store-grid{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; max-width:760px; margin-bottom:26px; }
+  .store-card{
+    position:relative; width:150px; padding:22px 16px 16px;
+    background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px; text-align:center; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .store-card.equipped{ border-color:#d4a855; box-shadow:0 0 16px rgba(212,168,85,0.25); }
+  .store-key-badge{
+    position:absolute; top:10px; left:10px; width:22px; height:22px; border-radius:50%;
+    background:#d4a855; color:#1a1614; font-weight:800; font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; box-shadow:0 3px 0 #b0a898;
+  }
+  .store-swatch{
+    width:64px; height:46px; border-radius:7px; margin:0 auto 14px;
+    box-shadow:0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .rgb-swatch .store-swatch{
+    background:linear-gradient(90deg,#ff4d4d,#ffd24d,#4dff88,#4dd2ff,#a64dff,#ff4d4d);
+    animation: rgbSpin 3s linear infinite;
+  }
+  @keyframes rgbSpin{ from{filter:hue-rotate(0deg);} to{filter:hue-rotate(360deg);} }
+  .mousepad-swatch .store-swatch{
+    background:
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 5px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 5px),
+      linear-gradient(135deg,#2b2934,#100f14);
+    border:1px dashed rgba(230,196,140,0.45);
+  }
+  .store-card h4{ color:#e8e2d8; font-size:13px; letter-spacing:2px; margin-bottom:10px; }
+  .store-status{
+    font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:1px;
+    color:#d4a855; font-weight:700;
+  }
+  .store-status.owned{ color:#8aad7a; }
+  .store-status.locked{ color:rgba(210,195,180,0.5); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="menu-ui">
+    <h1>KEYBOUND</h1>
+    <p>OYNA, AYARLAR ya da MAĞAZA YAZ</p>
+    <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
+  </div>
+  <div id="mode-select-ui">
+    <div class="mode-card">
+      <div class="mode-key">S</div>
+      <h3>SERBEST</h3>
+      <p>Yanma yok, süre yok. Sadece rahatla ve yaz.</p>
+      <div class="mode-record" id="rec-SERBEST"></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-key">N</div>
+      <h3>NORMAL</h3>
+      <p>Süreye karşı yarış. Hata yaparsan kombon sıfırlanır.</p>
+      <div class="mode-record" id="rec-NORMAL"></div>
+    </div>
+    <div class="mode-card">
+      <div class="mode-key">A</div>
+      <h3>ACIMASIZ</h3>
+      <p>Hata yapmak veya süreyi kaçırmak yasak. Affı yok.</p>
+      <div class="mode-record" id="rec-ACIMASIZ"></div>
+    </div>
+  </div>
+  <div id="pause-ui">
+    <h2>DURAKLATILDI</h2>
+    <div class="pause-options">
+      <div class="pause-item"><span class="key">ESC</span> DEVAM ET</div>
+      <div class="pause-item"><span class="key">Q</span> MENÜYE DÖN</div>
+    </div>
+  </div>
+  <div id="settings-ui">
+    <h2>AYARLAR</h2>
+    <div class="settings-options">
+      <div class="settings-item"><span class="key">S</span> SES <span class="toggle-val" id="set-sound">AÇIK</span></div>
+      <div class="settings-item"><span class="key">E</span> EFEKTLER <span class="toggle-val" id="set-effects">AÇIK</span></div>
+      <div class="settings-item"><span class="key">M</span> MÜZİK <span class="toggle-val" id="set-music">AÇIK</span></div>
+      <div class="settings-item"><span class="key">ESC</span> MENÜYE DÖN</div>
+    </div>
+  </div>
+  <div id="store-ui">
+    <h2>MAĞAZA</h2>
+    <div class="store-key-balance">SAHİP OLDUĞUN KEY: <span id="store-key-count">0</span></div>
+    <div class="store-tabs">
+      <div class="store-tab active" data-tab="keycap" onclick="switchStoreTab('keycap')">TUŞ TAKIMI</div>
+      <div class="store-tab" data-tab="main" onclick="switchStoreTab('main')">ANA TEMA</div>
+    </div>
+    <div class="store-grid" id="store-grid"></div>
+    <div class="pause-options">
+      <div class="pause-item"><span class="key">TAB</span> KATEGORİ DEĞİŞTİR</div>
+      <div class="pause-item"><span class="key">1-6</span> SATIN AL / KUŞAN</div>
+      <div class="pause-item"><span class="key">ESC</span> MENÜYE DÖN</div>
+    </div>
+  </div>
+  <div id="hud">
+    <div class="hud-left">
+      <div class="hud-box"><span class="label">TEMPO</span><span class="value" id="tempo">100%</span></div>
+      <div class="hud-box"><span class="label">KEY</span><span class="value key-value" id="key-count">0</span></div>
+    </div>
+    <div class="hud-title">KEYBOUND</div>
+    <div class="hud-box"><span class="label">ACC</span><span class="value" id="acc">--</span></div>
+  </div>
+  <div id="combo-wrap"><div id="combo">COMBO 0</div></div>
+  <div id="streak"></div>
+  <div id="log"></div>
+  <div id="footer">kelimeyi bar bitmeden yaz</div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+let ctx = canvas.getContext('2d');
+let W, H, CX, CY;
+
+let bgCanvas = null;      // aktif oyun ekranı arka planı (tema ne olursa olsun)
+let bgCanvasMenu = null;  // mousepad kuşanılıyken menüde gösterilecek nötr arka plan
+function createBackgroundCache() {
+  let mt = null;
+  try{ mt = getMainTheme(); }catch(e){}
+
+  if (mt && mt.mousepad) {
+    bgCanvas = document.createElement('canvas');
+    bgCanvas.width = W; bgCanvas.height = H;
+    drawMousepadTexture(bgCanvas.getContext('2d'));
+
+    bgCanvasMenu = document.createElement('canvas');
+    bgCanvasMenu.width = W; bgCanvasMenu.height = H;
+    drawDefaultGradient(bgCanvasMenu.getContext('2d'), ['#352e28','#2c2420','#221c18']);
+    return;
+  }
+
+  bgCanvasMenu = null;
+  bgCanvas = document.createElement('canvas');
+  bgCanvas.width = W; bgCanvas.height = H;
+  const mtColors = (mt && mt.colors) ? mt.colors : ['#352e28','#2c2420','#221c18'];
+  drawDefaultGradient(bgCanvas.getContext('2d'), mtColors);
+}
+
+function drawDefaultGradient(bctx, mtColors) {
+  const bg=bctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*0.7);
+  bg.addColorStop(0,mtColors[0]);
+  bg.addColorStop(0.6,mtColors[1]);
+  bg.addColorStop(1,mtColors[2]);
+  bctx.fillStyle=bg;
+  bctx.fillRect(0,0,W,H);
+
+  // Subtle fabric/felt texture (noise-like pattern)
+  bctx.save();
+  bctx.globalAlpha=0.03;
+  const step=6;
+  for(let y=0;y<H;y+=step){
+    for(let x=0;x<W;x+=step){
+      const v = Math.sin(x*0.1+y*0.15)*0.5+0.5;
+      bctx.fillStyle = v>0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
+      bctx.fillRect(x,y,step,step);
+    }
+  }
+  bctx.restore();
+}
+
+/* ── Mousepad ana teması: siyah zemin üzerinde beyaz topografik kontur çizgileri ── */
+function msHash(ix, iy, seed){
+  let h = (ix*374761393 + iy*668265263 + seed*974521) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  h = h ^ (h >>> 16);
+  return ((h >>> 0) % 100000) / 100000;
+}
+function msSmooth(t){ return t*t*(3-2*t); }
+function msValueNoise(x, y, scale, seed){
+  const gx = x/scale, gy = y/scale;
+  const ix = Math.floor(gx), iy = Math.floor(gy);
+  const fx = gx-ix, fy = gy-iy;
+  const v00 = msHash(ix,iy,seed), v10 = msHash(ix+1,iy,seed);
+  const v01 = msHash(ix,iy+1,seed), v11 = msHash(ix+1,iy+1,seed);
+  const sx = msSmooth(fx), sy = msSmooth(fy);
+  const a = v00 + (v10-v00)*sx;
+  const b = v01 + (v11-v01)*sx;
+  return a + (b-a)*sy;
+}
+function msFbm(x, y, seed){
+  const scales=[150,72,34], amps=[0.55,0.30,0.15];
+  let sum=0, total=0;
+  for(let i=0;i<scales.length;i++){
+    sum += msValueNoise(x,y,scales[i], seed+i*97) * amps[i];
+    total += amps[i];
+  }
+  return sum/total;
+}
+function drawMousepadTexture(bctx) {
+  bctx.fillStyle = '#050505';
+  bctx.fillRect(0,0,W,H);
+
+  const seed = 4242;
+  const cell = 11;
+  const cols = Math.ceil(W/cell)+1;
+  const rows = Math.ceil(H/cell)+1;
+  const grid = new Float32Array(cols*rows);
+  for(let j=0;j<rows;j++){
+    for(let i=0;i<cols;i++){
+      grid[j*cols+i] = msFbm(i*cell, j*cell, seed);
+    }
+  }
+  const val = (i,j) => grid[j*cols+i];
+
+  const levels = [0.30,0.38,0.46,0.54,0.62,0.70];
+  bctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  bctx.lineWidth = 1.3;
+  bctx.lineCap = 'round';
+  bctx.shadowColor = 'rgba(255,255,255,0.35)';
+  bctx.shadowBlur = 1;
+
+  for(const level of levels){
+    bctx.beginPath();
+    for(let j=0;j<rows-1;j++){
+      for(let i=0;i<cols-1;i++){
+        const x0=i*cell, y0=j*cell;
+        const tl=val(i,j), tr=val(i+1,j), br=val(i+1,j+1), bl=val(i,j+1);
+        const cross=[];
+        const lerp=(va,vb)=> (level-va)/(vb-va);
+        if((tl>level)!==(tr>level)) cross.push({e:'top', p:[x0+cell*lerp(tl,tr), y0]});
+        if((tr>level)!==(br>level)) cross.push({e:'right', p:[x0+cell, y0+cell*lerp(tr,br)]});
+        if((bl>level)!==(br>level)) cross.push({e:'bottom', p:[x0+cell*lerp(bl,br), y0+cell]});
+        if((tl>level)!==(bl>level)) cross.push({e:'left', p:[x0, y0+cell*lerp(tl,bl)]});
+
+        if(cross.length===2){
+          bctx.moveTo(cross[0].p[0], cross[0].p[1]);
+          bctx.lineTo(cross[1].p[0], cross[1].p[1]);
+        } else if(cross.length===4){
+          const pt = e => cross.find(c=>c.e===e).p;
+          if(tl>level){
+            bctx.moveTo(...pt('top')); bctx.lineTo(...pt('left'));
+            bctx.moveTo(...pt('right')); bctx.lineTo(...pt('bottom'));
+          } else {
+            bctx.moveTo(...pt('top')); bctx.lineTo(...pt('right'));
+            bctx.moveTo(...pt('left')); bctx.lineTo(...pt('bottom'));
+          }
+        }
+      }
+    }
+    bctx.stroke();
+  }
+  bctx.shadowBlur = 0;
+
+  // Kenarlara doğru hafif kararma (derinlik hissi)
+  const vg = bctx.createRadialGradient(CX,CY,Math.min(W,H)*0.35,CX,CY,Math.max(W,H)*0.72);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,0.35)');
+  bctx.fillStyle=vg;
+  bctx.fillRect(0,0,W,H);
+
+  // ── Mousepad kenar bezeli ──
+  const inset = Math.max(16, Math.min(W,H)*0.028);
+  const r = 22;
+  const bx=inset, by=inset, bw=W-inset*2, bh=H-inset*2;
+  const roundedPath = (x,y,w,h,rad) => {
+    bctx.beginPath();
+    bctx.moveTo(x+rad,y);
+    bctx.arcTo(x+w,y,x+w,y+h,rad);
+    bctx.arcTo(x+w,y+h,x,y+h,rad);
+    bctx.arcTo(x,y+h,x,y,rad);
+    bctx.arcTo(x,y,x+w,y,rad);
+    bctx.closePath();
+  };
+
+  // Kumaş kenarının dışını hafifçe karart
+  bctx.save();
+  roundedPath(0,0,W,H,28);
+  roundedPath(bx,by,bw,bh,r);
+  bctx.fillStyle = 'rgba(0,0,0,0.4)';
+  bctx.fill('evenodd');
+  bctx.restore();
+
+  // Dış gölge çizgisi (kabartma hissi)
+  bctx.save();
+  roundedPath(bx-1.5, by-1.5, bw+3, bh+3, r+2);
+  bctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  bctx.lineWidth = 3;
+  bctx.stroke();
+  bctx.restore();
+}
+
+let menuBgDiag = 0; // rotasyonlu deseni kaplamak için gereken minimum yarı-köşegen
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  CX = W/2; CY = H/2;
+  menuBgDiag = 0.5*Math.sqrt(W*W+H*H) + 100; // sadece ekranı kaplayacak kadar, fazlası yok
+  if(W > 0 && H > 0) createBackgroundCache();
+}
+window.addEventListener('resize', resize);
+resize();
+
+/* ── Seeded random for consistent sketch lines per key ── */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function generateSketchPath(w, h, seed) {
+  const rng = mulberry32(seed);
+  const path = new Path2D();
+  for(let i=0; i<8; i++){
+    const x1 = rng()*w;
+    const y1 = rng()*h;
+    const len = 8 + rng()*18;
+    const ang = -0.6 + rng()*0.4;
+    path.moveTo(x1, y1);
+    path.lineTo(x1 + Math.cos(ang)*len, y1 + Math.sin(ang)*len);
+  }
+  for(let i=0; i<3; i++){
+    const x1 = rng()*w*0.8;
+    const y1 = h*0.3 + rng()*h*0.5;
+    path.moveTo(x1, y1);
+    path.quadraticCurveTo(x1 + rng()*15 - 5, y1 + rng()*12 - 6, x1 + 10 + rng()*12, y1 + rng()*8 - 4);
+  }
+  return path;
+}
+
+function generateEdgePath(w, h, seed) {
+  const rng = mulberry32(seed);
+  const path = new Path2D();
+  for(let i=0; i<4; i++){
+    const x1 = 4 + rng()*(w-8);
+    const y1 = h - 5 - rng()*6;
+    path.moveTo(x1, y1);
+    path.lineTo(x1 + 6 + rng()*10, y1 + 2 + rng()*3);
+  }
+  for(let i=0; i<3; i++){
+    const x1 = w - 6 - rng()*5;
+    const y1 = 6 + rng()*(h-12);
+    path.moveTo(x1, y1);
+    path.lineTo(x1 + 2 + rng()*3, y1 + 5 + rng()*8);
+  }
+  return path;
+}
+
+/* ── Settings ── */
+const settings = { sound: true, effects: true, music: true };
+function updateSettingsUI(){
+  const soundEl = document.getElementById('set-sound');
+  const fxEl = document.getElementById('set-effects');
+  const musicEl = document.getElementById('set-music');
+  soundEl.textContent = settings.sound ? 'AÇIK' : 'KAPALI';
+  soundEl.classList.toggle('off', !settings.sound);
+  fxEl.textContent = settings.effects ? 'AÇIK' : 'KAPALI';
+  fxEl.classList.toggle('off', !settings.effects);
+  musicEl.textContent = settings.music ? 'AÇIK' : 'KAPALI';
+  musicEl.classList.toggle('off', !settings.music);
+}
+
+/* ── Key currency ── */
+const KEYS_STORAGE_KEY = 'keybound_keys_v1';
+function loadKeys(){
+  try{
+    const raw = localStorage.getItem(KEYS_STORAGE_KEY);
+    if(raw!==null){ const n=parseInt(raw,10); if(!isNaN(n)) return n; }
+  }catch(e){}
+  return 0;
+}
+let playerKeys = loadKeys();
+function saveKeys(){
+  try{ localStorage.setItem(KEYS_STORAGE_KEY, String(playerKeys)); }catch(e){}
+}
+function addKeys(n){
+  playerKeys += n;
+  saveKeys();
+  updateKeyHud();
+}
+function updateKeyHud(){
+  const hudEl = document.getElementById('key-count');
+  if(hudEl) hudEl.textContent = playerKeys;
+  const menuEl = document.getElementById('menu-key-balance');
+  if(menuEl) menuEl.textContent = `KEY: ${playerKeys}`;
+  const storeEl = document.getElementById('store-key-count');
+  if(storeEl) storeEl.textContent = playerKeys;
+}
+
+/* ── Mağaza / Temalar ── */
+// Kategori 1: Tuş takımı temaları (keycap renkleri)
+const KEYCAP_THEMES = [
+  { id:'default', name:'VARSAYILAN', cost:50, palette:null },
+  { id:'ocean',   name:'OKYANUS',    cost:50,
+    palette:{ topHi:'#5cc6e8', topLo:'#2f96b8', wallHi:'#2878a0', wallLo:'#1c5470',
+      rimHi:'#a0e4f5', glow:'rgba(92,198,232,0.35)' } },
+  { id:'emerald', name:'ZÜMRÜT',     cost:100,
+    palette:{ topHi:'#5ce892', topLo:'#2fb85e', wallHi:'#249850', wallLo:'#1a7038',
+      rimHi:'#a0f5c0', glow:'rgba(92,232,146,0.35)' } },
+  { id:'black_plastic', name:'SİYAH PLASTİK', cost:150,
+    palette:{ topHi:'#8a8a92', topLo:'#68686f', wallHi:'#525258', wallLo:'#3a3a3f',
+      rimHi:'#a8a8b0', glow:'rgba(150,150,160,0.3)' },
+    restPalette:{ topHi:'#2c2c30', topLo:'#161618', wallHi:'#101012', wallLo:'#050506',
+      rimHi:'#3e3e44', legend:'#c4c4c8', legendShadow:'rgba(0,0,0,0.4)',
+      sketchColor:'rgba(255,255,255,0.03)', glow:null },
+    caseColors:['#2c2c30','#212124','#141416'],
+    baseColors:['#1a1a1d','#131314','#0a0a0b'],
+    innerColor:'#0e0e10' },
+  { id:'rgb',     name:'RGB',        cost:200, animated:true, palette:null }
+];
+const SHOP_STORAGE_KEY = 'keybound_shop_v1';
+function loadShop(){
+  try{
+    const raw = localStorage.getItem(SHOP_STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.owned) && parsed.equipped) return parsed;
+    }
+  }catch(e){}
+  return { owned:['default'], equipped:'default' };
+}
+let shopState = loadShop();
+function saveShop(){
+  try{ localStorage.setItem(SHOP_STORAGE_KEY, JSON.stringify(shopState)); }catch(e){}
+}
+
+// Kategori 2: Ana tema (oyunun arka plan / sahne rengi)
+const MAIN_THEMES = [
+  { id:'main_default', name:'VARSAYILAN', cost:0,
+    colors:['#352e28','#2c2420','#221c18'], lamp:'212,168,85' },
+  { id:'main_ocean', name:'DERİN OKYANUS', cost:80,
+    colors:['#16323c','#0f242c','#0a181d'], lamp:'92,198,232' },
+  { id:'main_ember', name:'KIZIL ALEV', cost:80,
+    colors:['#3a231c','#2c1a15','#1e120e'], lamp:'196,92,74' },
+  { id:'main_forest', name:'ORMAN', cost:100,
+    colors:['#1e3020','#152318','#0e1810'], lamp:'92,232,146' },
+  { id:'main_mousepad', name:'MOUSEPAD', cost:200, mousepad:true, lamp:'230,196,140' },
+  { id:'main_rgb', name:'RGB', cost:200, animated:true }
+];
+const MAIN_SHOP_STORAGE_KEY = 'keybound_main_shop_v1';
+function loadMainShop(){
+  try{
+    const raw = localStorage.getItem(MAIN_SHOP_STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.owned) && parsed.equipped) return parsed;
+    }
+  }catch(e){}
+  return { owned:['main_default'], equipped:'main_default' };
+}
+let mainShopState = loadMainShop();
+function saveMainShop(){
+  try{ localStorage.setItem(MAIN_SHOP_STORAGE_KEY, JSON.stringify(mainShopState)); }catch(e){}
+}
+function applyMainTheme(){
+  if(W>0 && H>0) createBackgroundCache();
+}
+
+let storeTab = 'keycap'; // 'keycap' | 'main'
+function switchStoreTab(tab){
+  if(storeTab === tab) return;
+  storeTab = tab;
+  updateStoreUI();
+}
+
+function themeSwatchColors(t, isKeycap){
+  if(isKeycap){
+    if(t.restPalette) return [t.restPalette.topHi, t.palette.topHi];
+    if(t.palette) return [t.palette.topHi, t.palette.topLo];
+    return ['#daa54a','#c48a30']; // varsayılan altın renk
+  }
+  if(t.colors) return [t.colors[0], t.colors[2]];
+  return ['#352e28','#221c18'];
+}
+function updateStoreUI(){
+  updateKeyHud();
+  const grid = document.getElementById('store-grid');
+  if(!grid) return;
+  document.querySelectorAll('.store-tab').forEach(el=>{
+    el.classList.toggle('active', el.dataset.tab === storeTab);
+  });
+  const isKeycap = storeTab === 'keycap';
+  const list = isKeycap ? KEYCAP_THEMES : MAIN_THEMES;
+  const themeState = isKeycap ? shopState : mainShopState;
+  grid.innerHTML = list.map((t,i)=>{
+    const owned = themeState.owned.includes(t.id);
+    const equipped = themeState.equipped === t.id;
+    let statusHtml;
+    if(equipped) statusHtml = `<div class="store-status owned">KUŞANILDI</div>`;
+    else if(owned) statusHtml = `<div class="store-status owned">KUŞAN</div>`;
+    else statusHtml = `<div class="store-status">${t.cost} KEY</div>`;
+    const swatchStyle = (t.animated || t.mousepad) ? '' : `style="background:linear-gradient(135deg, ${themeSwatchColors(t,isKeycap)[0]}, ${themeSwatchColors(t,isKeycap)[1]})"`;
+    return `<div class="store-card${equipped?' equipped':''}${t.animated?' rgb-swatch':''}${t.mousepad?' mousepad-swatch':''}">
+      <div class="store-key-badge">${i+1}</div>
+      <div class="store-swatch" ${swatchStyle}></div>
+      <h4>${t.name}</h4>
+      ${statusHtml}
+    </div>`;
+  }).join('');
+}
+function handleThemeSelect(idx){
+  const isKeycap = storeTab === 'keycap';
+  const list = isKeycap ? KEYCAP_THEMES : MAIN_THEMES;
+  const t = list[idx];
+  if(!t) return;
+  const themeState = isKeycap ? shopState : mainShopState;
+  const save = isKeycap ? saveShop : saveMainShop;
+  const owned = themeState.owned.includes(t.id);
+  if(owned){
+    if(themeState.equipped !== t.id){
+      themeState.equipped = t.id;
+      save();
+      if(!isKeycap) applyMainTheme();
+      playSuccess();
+      logLine(`TEMA KUŞANILDI: ${t.name}`,'hit');
+    }
+  } else if(playerKeys >= t.cost){
+    playerKeys -= t.cost;
+    saveKeys();
+    themeState.owned.push(t.id);
+    themeState.equipped = t.id;
+    save();
+    if(!isKeycap) applyMainTheme();
+    playSuccess();
+    logLine(`SATIN ALINDI: ${t.name}`,'hit');
+  } else {
+    keyClack('wrong');
+    state.shake = Math.max(state.shake, 0.15);
+    logLine(`YETERSİZ KEY: ${t.name} (${t.cost} gerekli)`,'miss');
+  }
+  updateStoreUI();
+}
+function getThemePalette(now){
+  const theme = KEYCAP_THEMES.find(t=>t.id===shopState.equipped) || KEYCAP_THEMES[0];
+  if(theme.id === 'rgb'){
+    const hue = (now*0.05) % 360;
+    return {
+      topHi:`hsl(${hue},75%,68%)`, topLo:`hsl(${hue},70%,50%)`,
+      wallHi:`hsl(${hue},65%,42%)`, wallLo:`hsl(${hue},60%,28%)`,
+      rimHi:`hsl(${hue},85%,80%)`, dishShadow:'rgba(0,0,0,0.12)',
+      legend:'#fff8ee', legendShadow:'rgba(0,0,0,0.3)',
+      sketchColor:'rgba(0,0,0,0.08)', glow:`hsla(${hue},90%,60%,0.35)`
+    };
+  }
+  if(theme.palette){
+    return { ...KEYCAP_PALETTES.active, ...theme.palette,
+      legend:'#fff8ee', legendShadow:'rgba(0,0,0,0.3)', sketchColor:'rgba(0,0,0,0.08)' };
+  }
+  return KEYCAP_PALETTES.active;
+}
+function getRestPalette(){
+  const theme = KEYCAP_THEMES.find(t=>t.id===shopState.equipped) || KEYCAP_THEMES[0];
+  if(theme.restPalette){
+    return { ...KEYCAP_PALETTES.waiting, ...theme.restPalette };
+  }
+  return KEYCAP_PALETTES.waiting;
+}
+function getMainTheme(){
+  return MAIN_THEMES.find(t=>t.id===mainShopState.equipped) || MAIN_THEMES[0];
+}
+function getCaseTheme(){
+  const theme = KEYCAP_THEMES.find(t=>t.id===shopState.equipped) || KEYCAP_THEMES[0];
+  return {
+    caseColors: theme.caseColors || ['#e8e2d8','#ddd6ca','#d0c8ba'],
+    baseColors: theme.baseColors || ['#6b5440','#5a4535','#4a3828'],
+    innerColor: theme.innerColor || '#2a2420'
+  };
+}
+
+/* ── Audio ── */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+let noiseBuffer = null;
+function getNoiseBuffer(){
+  ensureAudio();
+  if(noiseBuffer) return noiseBuffer;
+  const sz = audioCtx.sampleRate*0.08;
+  noiseBuffer = audioCtx.createBuffer(1,sz,audioCtx.sampleRate);
+  const d = noiseBuffer.getChannelData(0);
+  for(let i=0;i<sz;i++) d[i]=Math.random()*2-1;
+  return noiseBuffer;
+}
+function keyClack(type){
+  if(!settings.sound) return;
+  try{
+    ensureAudio();
+    const t=audioCtx.currentTime, hit=type==='hit';
+    const src=audioCtx.createBufferSource();
+    src.buffer=getNoiseBuffer();
+    const f=audioCtx.createBiquadFilter();
+    f.type='bandpass';
+    f.frequency.value=hit?(2400+Math.random()*500):(900+Math.random()*200);
+    f.Q.value=hit?1.3:0.8;
+    const g=audioCtx.createGain();
+    g.gain.setValueAtTime(hit?0.14:0.04,t);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+(hit?0.045:0.035));
+    src.connect(f);f.connect(g);g.connect(audioCtx.destination);
+    src.start(t);src.stop(t+0.05);
+    const o=audioCtx.createOscillator(),og=audioCtx.createGain();
+    o.type='sine';
+    o.frequency.value=hit?160:90;
+    og.gain.setValueAtTime(hit?0.06:0.025,t);
+    og.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
+    o.connect(og);og.connect(audioCtx.destination);
+    o.start(t);o.stop(t+0.045);
+  }catch(e){}
+}
+function playSuccess(){
+  if(!settings.sound) return;
+  try{
+    ensureAudio();
+    const t=audioCtx.currentTime;
+    [523.25,659.25,783.99,1046.50].forEach((freq,i)=>{
+      const s=t+i*0.055,d=0.26;
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type='triangle';o.frequency.value=freq;
+      g.gain.setValueAtTime(0.0001,s);
+      g.gain.linearRampToValueAtTime(0.07,s+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,s+d);
+      o.connect(g);g.connect(audioCtx.destination);
+      o.start(s);o.stop(s+d+0.02);
+    });
+  }catch(e){}
+}
+
+/* ── Lofi background music ── */
+let musicStarted=false;
+let musicGain=null;
+const MUSIC_VOLUME=0.055;
+const LOFI_CHORDS=[
+  [130.81,164.81,196.00,246.94], // Cmaj7
+  [110.00,130.81,164.81,196.00], // Am7
+  [146.83,174.61,220.00,261.63], // Dm7
+  [98.00,123.47,146.83,174.61]   // G7
+];
+const BPM=78;
+const BEAT_DUR=60/BPM;
+const CHORD_DUR=BEAT_DUR*4; // one chord per 4-beat bar
+
+function setMusicVolume(on){
+  if(!musicGain) return;
+  try{
+    musicGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    musicGain.gain.setTargetAtTime(on?MUSIC_VOLUME:0, audioCtx.currentTime, 0.5);
+  }catch(e){}
+}
+
+function scheduleLofiChord(freqs, startTime, dur){
+  const filt=audioCtx.createBiquadFilter();
+  filt.type='lowpass'; filt.frequency.value=950; filt.Q.value=0.6;
+  const chordGain=audioCtx.createGain();
+  chordGain.gain.setValueAtTime(0.0001,startTime);
+  chordGain.gain.linearRampToValueAtTime(1,startTime+0.7);
+  chordGain.gain.setValueAtTime(1,startTime+dur-1.0);
+  chordGain.gain.linearRampToValueAtTime(0.0001,startTime+dur);
+  chordGain.connect(filt); filt.connect(musicGain);
+  freqs.forEach((f,i)=>{
+    const o=audioCtx.createOscillator();
+    o.type = i===0 ? 'triangle' : 'sine';
+    o.frequency.value=f;
+    o.connect(chordGain);
+    o.start(startTime); o.stop(startTime+dur+0.2);
+  });
+}
+
+/* Soft boom-bap style drum hits, kept quiet under the chords */
+function kickHit(t){
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type='sine';
+  o.frequency.setValueAtTime(72,t);
+  o.frequency.exponentialRampToValueAtTime(36,t+0.13);
+  g.gain.setValueAtTime(0.5,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+  o.connect(g); g.connect(musicGain);
+  o.start(t); o.stop(t+0.25);
+}
+function snareHit(t){
+  const src=audioCtx.createBufferSource();
+  src.buffer=getNoiseBuffer();
+  const filt=audioCtx.createBiquadFilter();
+  filt.type='bandpass'; filt.frequency.value=1500; filt.Q.value=0.7;
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(0.22,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+  src.connect(filt); filt.connect(g); g.connect(musicGain);
+  src.start(t); src.stop(t+0.15);
+
+  const o=audioCtx.createOscillator(), og=audioCtx.createGain();
+  o.type='triangle'; o.frequency.value=185;
+  og.gain.setValueAtTime(0.12,t);
+  og.gain.exponentialRampToValueAtTime(0.0001,t+0.07);
+  o.connect(og); og.connect(musicGain);
+  o.start(t); o.stop(t+0.08);
+}
+function hihatHit(t,vel){
+  const src=audioCtx.createBufferSource();
+  src.buffer=getNoiseBuffer();
+  const filt=audioCtx.createBiquadFilter();
+  filt.type='highpass'; filt.frequency.value=7500;
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(0.09*vel,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.035);
+  src.connect(filt); filt.connect(g); g.connect(musicGain);
+  src.start(t); src.stop(t+0.04);
+}
+function scheduleDrumBar(barStart){
+  const eighth=BEAT_DUR/2;
+  const swing=eighth*0.16;
+  kickHit(barStart);
+  kickHit(barStart+2*BEAT_DUR+eighth*0.5);
+  snareHit(barStart+1*BEAT_DUR);
+  snareHit(barStart+3*BEAT_DUR);
+  for(let i=0;i<8;i++){
+    const time=barStart+i*eighth+(i%2===1?swing:0);
+    hihatHit(time, i%2===0?1:0.55);
+  }
+}
+
+let lofiTimer=null;
+function scheduleLofiBar(startTime){
+  LOFI_CHORDS.forEach((chord,i)=>{
+    const barStart=startTime+i*CHORD_DUR;
+    scheduleDrumBar(barStart);
+  });
+  const totalDur=LOFI_CHORDS.length*CHORD_DUR;
+  lofiTimer=setTimeout(()=>{
+    if(musicStarted) scheduleLofiBar(audioCtx.currentTime+0.05);
+  }, (totalDur-0.3)*1000);
+}
+
+let vinylBuffer=null;
+function getVinylBuffer(){
+  if(vinylBuffer) return vinylBuffer;
+  const dur=2.5;
+  const sz=Math.floor(audioCtx.sampleRate*dur);
+  vinylBuffer=audioCtx.createBuffer(1,sz,audioCtx.sampleRate);
+  const d=vinylBuffer.getChannelData(0);
+  for(let i=0;i<sz;i++){
+    d[i]=(Math.random()*2-1) * (Math.random()<0.0015 ? 0.9 : 0.12);
+  }
+  return vinylBuffer;
+}
+function startVinylCrackle(){
+  const src=audioCtx.createBufferSource();
+  src.buffer=getVinylBuffer();
+  src.loop=true;
+  const filt=audioCtx.createBiquadFilter();
+  filt.type='highpass'; filt.frequency.value=1600;
+  const g=audioCtx.createGain();
+  g.gain.value=0.18;
+  src.connect(filt); filt.connect(g); g.connect(musicGain);
+  src.start();
+}
+
+function startMusic(){
+  if(musicStarted) return;
+  musicStarted=true;
+  ensureAudio();
+  musicGain=audioCtx.createGain();
+  musicGain.gain.value = settings.music ? MUSIC_VOLUME : 0;
+  musicGain.connect(audioCtx.destination);
+  scheduleLofiBar(audioCtx.currentTime+0.2);
+  // vinyl crackle disabled
+}
+
+/* ── State ── */
+let gameState = 'MENU';
+let currentMode = 'NORMAL';
+let pausedAt = 0;
+
+const state = {
+  tempo:1, targetTempo:1, combo:0, maxCombo:0,
+  wordsCompleted:0, wordsMissed:0,
+  glitch:0, frozenUntil:0,
+  shake:0, sx:0, sy:0,
+  startedAt:0
+};
+
+/* ── Kişisel rekorlar (localStorage) ── */
+const RECORDS_KEY = 'keybound_records_v1';
+function loadRecords(){
+  try{
+    const raw = localStorage.getItem(RECORDS_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return {};
+}
+function getModeRecord(mode){
+  const all = loadRecords();
+  return all[mode] || { bestWords:0, bestCombo:0, bestAcc:0, bestWpm:0 };
+}
+// Kaydeder ve hangi alanların yeni rekor olduğunu döndürür
+function saveModeRecord(mode, stats){
+  const all = loadRecords();
+  const prev = all[mode] || { bestWords:0, bestCombo:0, bestAcc:0, bestWpm:0 };
+  const isNew = {
+    words: stats.words > prev.bestWords,
+    combo: stats.combo > prev.bestCombo,
+    acc: stats.acc > prev.bestAcc && stats.words >= 5, // anlamlı olsun diye min 5 kelime
+    wpm: stats.wpm > prev.bestWpm && stats.words >= 5
+  };
+  const updated = {
+    bestWords: Math.max(prev.bestWords, stats.words),
+    bestCombo: Math.max(prev.bestCombo, stats.combo),
+    bestAcc: Math.max(prev.bestAcc, isNew.acc ? stats.acc : prev.bestAcc),
+    bestWpm: Math.max(prev.bestWpm, isNew.wpm ? stats.wpm : prev.bestWpm)
+  };
+  all[mode] = updated;
+  try{ localStorage.setItem(RECORDS_KEY, JSON.stringify(all)); }catch(e){}
+  return isNew;
+}
+function computeSessionStats(){
+  const words = state.wordsCompleted;
+  const missed = state.wordsMissed;
+  const total = words+missed;
+  const acc = total ? Math.round((words/total)*100) : 0;
+  const elapsedMin = state.startedAt ? (performance.now()-state.startedAt)/60000 : 0;
+  const wpm = elapsedMin>0.05 ? Math.round(words/elapsedMin) : 0;
+  return { words, missed, acc, combo: state.maxCombo, wpm };
+}
+
+/* ── Words ── */
+const WORD_POOL = [
+  'SES','YOL','ANI','TON','GÜÇ','HIZ','KAÇ','TUŞ','SIR','AŞK','GÖZ','KOL','ISI','ZİL','TAŞ','KUM','SAZ','KOD','BAĞ','ÇİP','FON','HİS','KAN','KAS','KÖK','NOT','OKU','PİL','RUH','SAF','YAZ','ZOR',
+  'ATEŞ','IŞIK','ODAK','AKIŞ','NOTA','RÜYA','TREN','KAPI','ÇARK','UYUM','DOKU','SIRT','İVME','DOLU','KATI','SIVI','AĞIR','AKIM','ALAN','ARAÇ','BANT','BLOK','DATA','ESER','FORM','HARF','HATA','KARE','KASA','KLAN','KURS','LİNK','MOLA','NORM','ONAY','OYUN','ÖYKÜ','PLAN','PUAN','RİSK','SAYI','SKOR','TEST','VERİ','YAPI',
+  'RİTİM','DENGE','ZAMAN','NABIZ','GÜNEŞ','BULUT','ÇEVİK','TEMPO','NEFES','YÜZEY','DALGA','DUMAN','GÖLGE','KİLİT','DÜĞÜM','ÇİZGİ','PARÇA','AKORT','EKRAN','KABLO','DÜZEN','ANLAM','YANKI','DÖNGÜ','HAFİF','VURUŞ','AHENK','AKTİF','ARŞİV','BİÇİM','CEVAP','CİHAZ','ÇÖZÜM','DEĞER','DETAY','DİKEY','DOĞRU','DOSYA','EFEKT','FİKİR','FOKUS','GİRİŞ','GÖRÜŞ','GURUR','HACİM','HEDEF','HESAP','HÜCRE','İŞLEM','KAYIT','KURAL','MANTIK','METİN','MÜZİK','NESNE','ORTAM','PANEL','PROJE','ROBOT','SANAT','SINIR','SİLAH','TABLO','TEMA','TEORİ','UZMAN','ÜNİTE','VİDEO','YATAY','YAYIN','YORUM','ZEMİN',
+  'BAŞARI','BELLEK','BOŞLUK','DİKKAT','EFSANE','ENERJİ','KLAVYE','KUVVET','MİKTAR','SİSTEM','SÜRÜCÜ','ŞİDDET','YAZILIM','GELİŞİM','BİLİŞİM','TEKNİK','GÜNCEL','SÖZCÜK','YÖNTEM','HAREKET','AŞAĞI','YUKARI','SESSİZ','GÖRÜNTÜ',
+
+  // Gündelik eşyalar
+  'ÇAY','RAF','FARE','MASA','HALI','SAAT','ŞARJ','ÇANTA','DOLAP','PERDE','KALEM','SİLGİ','YASTIK','KOLTUK','CÜZDAN','DEFTER','CETVEL','ANAHTAR','ŞEMSİYE','GÖZLÜK','SANDALYE','AYAKKABI',
+
+  // Elektronik / teknoloji
+  'TELEFON','KULAKLIK','KAMERA','YAZICI','MODEM','MİKROFON','HOPARLÖR','PİKSEL','SENSÖR','UYGULAMA',
+
+  // Yiyecek-içecek
+  'BAL','SÜT','MUZ','ELMA','KAHVE','EKMEK','TABAK','ÇATAL','KAŞIK','BIÇAK','FIRIN','MUTFAK','PEYNİR','ZEYTİN','BARDAK','TENCERE','ÇİKOLATA',
+
+  // Vücut
+  'DİZ','SAÇ','KAŞ','OMUZ','AYAK','BURUN','DUDAK','BİLEK','KULAK','PARMAK','DİRSEK','KİRPİK',
+
+  // Doğa
+  'DAĞ','KAR','DENİZ','ORMAN','NEHİR','YAPRAK','ÇİÇEK','TOPRAK','YILDIZ','YAĞMUR','RÜZGAR','GÖKYÜZÜ',
+
+  // Duygular
+  'ÖFKE','NEŞE','UMUT','MUTLU','SEVGİ','SAKİN','KORKU','HUZUR','ÜZGÜN','HEYECAN'
+];
+const MS_PER_LETTER = 620;
+let word = null;
+let settingsWord = null;
+let storeWord = null;
+let nextSpawnAt = performance.now()+600;
+
+function spawnMenuWord(){
+  const letters = ['O','Y','N','A'];
+  word = {
+    letters, index:0,
+    spawnedAt:performance.now(),
+    duration:Infinity,
+    boxes:letters.map((_,i)=>{
+      const seed = Math.floor(Math.random()*99999+i*1000);
+      return {
+        wf:0, pf:0, bounce:0, seed,
+        sketchPath: generateSketchPath(56, 52, seed),
+        edgePath: generateEdgePath(56, 52, seed)
+      };
+    }),
+    enter:0
+  };
+}
+
+function spawnSettingsMenuWord(){
+  const letters = ['A','Y','A','R','L','A','R'];
+  settingsWord = {
+    letters, index:0,
+    spawnedAt:performance.now(),
+    duration:Infinity,
+    boxes:letters.map((_,i)=>{
+      const seed = Math.floor(Math.random()*99999+i*1000+500);
+      return {
+        wf:0, pf:0, bounce:0, seed,
+        sketchPath: generateSketchPath(56, 52, seed),
+        edgePath: generateEdgePath(56, 52, seed)
+      };
+    }),
+    enter:0
+  };
+}
+
+function spawnStoreMenuWord(){
+  const letters = ['M','A','Ğ','A','Z','A'];
+  storeWord = {
+    letters, index:0,
+    spawnedAt:performance.now(),
+    duration:Infinity,
+    boxes:letters.map((_,i)=>{
+      const seed = Math.floor(Math.random()*99999+i*1000+900);
+      return {
+        wf:0, pf:0, bounce:0, seed,
+        sketchPath: generateSketchPath(56, 52, seed),
+        edgePath: generateEdgePath(56, 52, seed)
+      };
+    }),
+    enter:0
+  };
+}
+
+function spawnWord(){
+  const raw = WORD_POOL[Math.floor(Math.random()*WORD_POOL.length)];
+  const letters = raw.split('');
+  word = {
+    letters, index:0,
+    spawnedAt:performance.now(),
+    duration: currentMode === 'SERBEST' ? Infinity : letters.length*MS_PER_LETTER,
+    boxes:letters.map((_,i)=>{
+      const seed = Math.floor(Math.random()*99999+i*1000);
+      return {
+        wf:0, pf:0, bounce:0, seed,
+        sketchPath: generateSketchPath(56, 52, seed),
+        edgePath: generateEdgePath(56, 52, seed)
+      };
+    }),
+    enter:0
+  };
+}
+
+/* ── HUD ── */
+const logEl=document.getElementById('log');
+function logLine(t,c){
+  const d=document.createElement('div');
+  d.innerHTML=`<span class="${c}">${t}</span>`;
+  logEl.prepend(d);
+  while(logEl.childNodes.length>6) logEl.removeChild(logEl.lastChild);
+}
+const comboEl=document.getElementById('combo');
+const streakEl=document.getElementById('streak');
+function updateHud(){
+  comboEl.textContent=`COMBO ${state.combo}`;
+  comboEl.classList.add('pop');
+  setTimeout(()=>comboEl.classList.remove('pop'),120);
+  document.getElementById('tempo').textContent=`${Math.round(state.tempo*100)}%`;
+  const tot=state.wordsCompleted+state.wordsMissed;
+  const acc=tot?Math.round((state.wordsCompleted/tot)*100):null;
+  document.getElementById('acc').textContent=acc===null?'--':acc+'%';
+  if(state.combo>=5){
+    streakEl.classList.add('show');
+    streakEl.textContent=state.combo>=15?'UNSTOPPABLE':state.combo>=10?'ON FIRE':'STREAK x'+state.combo;
+  } else streakEl.classList.remove('show');
+}
+function wordCenter(){
+  if (gameState === 'MENU') return {x:CX, y:CY-40};
+  return {x:CX, y:CY+10};
+}
+function settingsWordCenter(){
+  return {x:CX, y:CY+130};
+}
+function storeWordCenter(){
+  return {x:CX, y:CY+250};
+}
+
+function completeWord(){
+  const c=wordCenter();
+
+  if (gameState === 'MENU') {
+    gameState = 'MODESELECT';
+    document.body.classList.add('mode-select-active');
+    document.getElementById('menu-ui').style.opacity = '0';
+    playSuccess();
+    word=null; settingsWord=null; storeWord=null;
+    updateModeRecordsUI();
+    return;
+  }
+
+  state.combo+=1;
+  if(state.combo>state.maxCombo) state.maxCombo=state.combo;
+  state.wordsCompleted+=1;
+  state.targetTempo=Math.min(1.15,1.0+state.combo*0.015);
+  addKeys(1);
+  playSuccess();
+  // subtle burst
+  if(settings.effects) for(let i=0;i<12;i++){
+    const a=Math.random()*Math.PI*2, sp=60+Math.random()*120;
+    bursts.push({
+      x:c.x, y:c.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-50,
+      life:0.6+Math.random()*0.4, ml:0.6+Math.random()*0.4,
+      size:2+Math.random()*2,
+      type: Math.random()>0.5?'gold':'cream'
+    });
+  }
+  logLine(`TAMAM  '${word.letters.join('')}'  +combo ${state.combo}`,'hit');
+  updateHud();
+  word=null; nextSpawnAt=performance.now()+480;
+}
+function completeSettingsMenuWord(){
+  gameState = 'SETTINGS';
+  document.body.classList.add('settings-active');
+  document.getElementById('menu-ui').style.opacity = '0';
+  updateSettingsUI();
+  playSuccess();
+  word=null; settingsWord=null; storeWord=null;
+}
+function completeStoreMenuWord(){
+  gameState = 'STORE';
+  document.body.classList.add('store-active');
+  document.getElementById('menu-ui').style.opacity = '0';
+  updateStoreUI();
+  playSuccess();
+  word=null; settingsWord=null; storeWord=null;
+}
+
+function missWord(reason){
+  state.combo=0; state.wordsMissed+=1;
+  state.glitch=0.2; state.shake=0.25;
+  state.targetTempo=Math.max(0.7,state.tempo-0.1);
+  state.frozenUntil=performance.now()+220;
+  logLine(`KACTI  '${word.letters.join('')}'  (${reason})`,'miss');
+  updateHud();
+  word=null; nextSpawnAt=performance.now()+650;
+}
+
+function startGame(mode) {
+  currentMode = mode;
+  gameState = 'PLAYING';
+  document.body.classList.remove('mode-select-active');
+  document.body.classList.add('playing');
+  
+  state.combo=0; state.maxCombo=0;
+  state.wordsCompleted=0; state.wordsMissed=0;
+  state.tempo=1; state.targetTempo=1;
+  state.startedAt=performance.now();
+  updateHud();
+  playSuccess();
+  
+  const c=wordCenter();
+  if(settings.effects) for(let i=0;i<16;i++){
+    const a=Math.random()*Math.PI*2, sp=80+Math.random()*150;
+    bursts.push({
+      x:c.x, y:c.y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-50,
+      life:0.6+Math.random()*0.5, ml:0.6+Math.random()*0.5,
+      size:2.5+Math.random()*2,
+      type: Math.random()>0.5?'gold':'cream'
+    });
+  }
+  logEl.innerHTML='';
+  logLine(`MOD: ${mode} -- BAŞLIYOR`, 'hit');
+  word=null; nextSpawnAt=performance.now()+500;
+}
+
+function updateModeRecordsUI(){
+  ['SERBEST','NORMAL','ACIMASIZ'].forEach(mode=>{
+    const r = getModeRecord(mode);
+    const el = document.getElementById('rec-'+mode);
+    if(!el) return;
+    if(r.bestWords===0){
+      el.textContent = 'Henüz kayıt yok';
+    } else if(mode==='SERBEST'){
+      el.textContent = `EN İYİ: ${r.bestWords} kelime`;
+    } else {
+      el.textContent = `EN İYİ: ${r.bestCombo} kombo · ${r.bestWords} kelime`;
+    }
+  });
+}
+
+function statCardHtml(label, val, isRecord){
+  return `<div class="stat-card${isRecord?' is-record':''}">
+    <div class="stat-label">${label}</div>
+    <div class="stat-val">${val}</div>
+    ${isRecord?'<div class="stat-badge">★ YENİ REKOR</div>':''}
+  </div>`;
+}
+
+function showSessionSummary(reason, isFail){
+  const stats = computeSessionStats();
+  const isNew = saveModeRecord(currentMode, stats);
+  const anyRecord = isNew.words||isNew.combo||isNew.acc||isNew.wpm;
+
+  gameState = 'GAMEOVER';
+  word = null;
+  document.body.classList.remove('playing');
+  document.body.classList.add('game-over');
+
+  const titleColor = isFail ? '#c45c4a' : '#e8e2d8';
+  const title = isFail ? 'OYUN BİTTİ' : 'OTURUM TAMAMLANDI';
+
+  const menuUi = document.getElementById('menu-ui');
+  menuUi.style.opacity = '1';
+  menuUi.innerHTML = `
+    <h1 style="color:${titleColor}; font-size:36px; letter-spacing:6px;">${title}</h1>
+    <p style="font-size:13px;">${reason || ''}${anyRecord ? '  —  YENİ REKOR KIRDIN!' : ''}</p>
+    <div class="summary-stats">
+      ${statCardHtml('KELİME', stats.words, isNew.words)}
+      ${statCardHtml('KOMBO', stats.combo, isNew.combo)}
+      ${statCardHtml('İSABET', stats.acc+'%', isNew.acc)}
+      ${statCardHtml('DK/KEL', stats.wpm, isNew.wpm)}
+    </div>
+    <p style="margin-top:24px; color:#d4a855; font-size:12px; letter-spacing:2px;">MENÜYE DÖNMEK İÇİN <span style="color:#fff; font-weight:800; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px;">SPACE</span> BAS</p>
+  `;
+  logLine(`${title}: ${reason||''}`, isFail?'miss':'hit');
+}
+
+function gameOver(reason) {
+  showSessionSummary(reason, true);
+}
+
+window.addEventListener('keydown',(e)=>{
+  if(!musicStarted) startMusic();
+  if (e.key === 'Escape') {
+    if (gameState === 'PLAYING') {
+      gameState = 'PAUSED';
+      pausedAt = performance.now();
+      document.body.classList.add('paused');
+      return;
+    } else if (gameState === 'PAUSED') {
+      const pauseDur = performance.now() - pausedAt;
+      if(word) word.spawnedAt += pauseDur;
+      nextSpawnAt += pauseDur;
+      state.frozenUntil += pauseDur;
+      gameState = 'PLAYING';
+      document.body.classList.remove('paused');
+      return;
+    }
+  }
+
+  const key=e.key.toLocaleUpperCase('tr-TR');
+
+  if (gameState === 'PAUSED') {
+    if (key === 'Q') {
+      document.body.classList.remove('paused');
+      const hasProgress = (state.wordsCompleted + state.wordsMissed) > 0;
+      if (hasProgress) {
+        showSessionSummary('OTURUM ÖZETİ', false);
+        return;
+      }
+      gameState = 'MENU';
+      document.body.classList.remove('playing');
+      document.getElementById('menu-ui').style.opacity = '1';
+      document.getElementById('menu-ui').innerHTML = `
+        <h1>KEYBOUND</h1>
+        <p>OYNA, AYARLAR ya da MAĞAZA YAZ</p>
+        <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
+      `;
+      updateKeyHud();
+      spawnMenuWord(); spawnSettingsMenuWord(); spawnStoreMenuWord();
+    }
+    return;
+  }
+
+  if (gameState === 'SETTINGS') {
+    if (e.key === 'Escape' || key === 'Q') {
+      gameState = 'MENU';
+      document.body.classList.remove('settings-active');
+      document.getElementById('menu-ui').style.opacity = '1';
+      spawnMenuWord(); spawnSettingsMenuWord(); spawnStoreMenuWord();
+    } else if (key === 'S') {
+      settings.sound = !settings.sound;
+      updateSettingsUI();
+    } else if (key === 'E') {
+      settings.effects = !settings.effects;
+      updateSettingsUI();
+    } else if (key === 'M') {
+      settings.music = !settings.music;
+      setMusicVolume(settings.music);
+      updateSettingsUI();
+    }
+    return;
+  }
+
+  if (gameState === 'STORE') {
+    if (e.key === 'Escape' || key === 'Q') {
+      gameState = 'MENU';
+      document.body.classList.remove('store-active');
+      document.getElementById('menu-ui').style.opacity = '1';
+      spawnMenuWord(); spawnSettingsMenuWord(); spawnStoreMenuWord();
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      switchStoreTab(storeTab === 'keycap' ? 'main' : 'keycap');
+    } else if (/^[1-6]$/.test(key)) {
+      handleThemeSelect(parseInt(key,10)-1);
+    }
+    return;
+  }
+
+  if (gameState === 'MODESELECT') {
+    if (key === 'S') startGame('SERBEST');
+    else if (key === 'N') startGame('NORMAL');
+    else if (key === 'A') startGame('ACIMASIZ');
+    return;
+  }
+  
+  if (gameState === 'GAMEOVER') {
+    if (e.code === 'Space') {
+      gameState = 'MENU';
+      document.body.classList.remove('game-over');
+      document.getElementById('menu-ui').innerHTML = `
+        <h1>KEYBOUND</h1>
+        <p>OYNA, AYARLAR ya da MAĞAZA YAZ</p>
+        <p class="menu-key-balance" id="menu-key-balance">KEY: 0</p>
+      `;
+      updateKeyHud();
+      spawnMenuWord(); spawnSettingsMenuWord(); spawnStoreMenuWord();
+    }
+    return;
+  }
+
+  if (gameState === 'MENU') {
+    if (performance.now() < state.frozenUntil) return;
+    if (word && key === word.letters[word.index]) {
+      word.boxes[word.index].pf=1;
+      word.boxes[word.index].bounce=1;
+      word.index+=1;
+      keyClack('hit');
+      const c=wordCenter(), boxW=56, gap=12;
+      const totalW=word.letters.length*boxW+(word.letters.length-1)*gap;
+      const startX=c.x-totalW/2;
+      const bx=startX+(word.index-1)*(boxW+gap)+boxW/2;
+      for(let i=0;i<4;i++){
+        if(!settings.effects) break;
+        const a=Math.random()*Math.PI*2,sp=30+Math.random()*80;
+        bursts.push({x:bx,y:c.y-8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-30,
+          life:0.3+Math.random()*0.3,ml:0.3+Math.random()*0.3,size:1.5+Math.random()*1.5,type:'gold'});
+      }
+      if(word.index>=word.letters.length) completeWord();
+    } else if (settingsWord && key === settingsWord.letters[settingsWord.index]) {
+      settingsWord.boxes[settingsWord.index].pf=1;
+      settingsWord.boxes[settingsWord.index].bounce=1;
+      settingsWord.index+=1;
+      keyClack('hit');
+      const c=settingsWordCenter(), boxW=56, gap=12;
+      const totalW=settingsWord.letters.length*boxW+(settingsWord.letters.length-1)*gap;
+      const startX=c.x-totalW/2;
+      const bx=startX+(settingsWord.index-1)*(boxW+gap)+boxW/2;
+      for(let i=0;i<4;i++){
+        if(!settings.effects) break;
+        const a=Math.random()*Math.PI*2,sp=30+Math.random()*80;
+        bursts.push({x:bx,y:c.y-8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-30,
+          life:0.3+Math.random()*0.3,ml:0.3+Math.random()*0.3,size:1.5+Math.random()*1.5,type:'gold'});
+      }
+      if(settingsWord.index>=settingsWord.letters.length) completeSettingsMenuWord();
+    } else if (storeWord && key === storeWord.letters[storeWord.index]) {
+      storeWord.boxes[storeWord.index].pf=1;
+      storeWord.boxes[storeWord.index].bounce=1;
+      storeWord.index+=1;
+      keyClack('hit');
+      const c=storeWordCenter(), boxW=56, gap=12;
+      const totalW=storeWord.letters.length*boxW+(storeWord.letters.length-1)*gap;
+      const startX=c.x-totalW/2;
+      const bx=startX+(storeWord.index-1)*(boxW+gap)+boxW/2;
+      for(let i=0;i<4;i++){
+        if(!settings.effects) break;
+        const a=Math.random()*Math.PI*2,sp=30+Math.random()*80;
+        bursts.push({x:bx,y:c.y-8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-30,
+          life:0.3+Math.random()*0.3,ml:0.3+Math.random()*0.3,size:1.5+Math.random()*1.5,type:'gold'});
+      }
+      if(storeWord.index>=storeWord.letters.length) completeStoreMenuWord();
+    } else if (/^[A-ZÇĞİÖŞÜ]$/.test(key)) {
+      if(word) word.boxes[word.index].wf=1;
+      state.shake=0.08;
+      keyClack('wrong');
+    }
+    return;
+  }
+
+  if(!word||performance.now()<state.frozenUntil) return;
+
+  const expected=word.letters[word.index];
+  if(key===expected){
+    word.boxes[word.index].pf=1;
+    word.boxes[word.index].bounce=1;
+    word.index+=1;
+    keyClack('hit');
+    const c=wordCenter(), boxW=56, gap=12;
+    const totalW=word.letters.length*boxW+(word.letters.length-1)*gap;
+    const startX=c.x-totalW/2;
+    const bx=startX+(word.index-1)*(boxW+gap)+boxW/2;
+    for(let i=0;i<4;i++){
+      if(!settings.effects) break;
+      const a=Math.random()*Math.PI*2,sp=30+Math.random()*80;
+      bursts.push({x:bx,y:c.y-8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-30,
+        life:0.3+Math.random()*0.3,ml:0.3+Math.random()*0.3,size:1.5+Math.random()*1.5,type:'gold'});
+    }
+    if(word.index>=word.letters.length) completeWord();
+  } else if(/^[A-ZÇĞİÖŞÜ]$/.test(key)){
+    if (currentMode === 'ACIMASIZ') {
+      gameOver('YANLIŞ TUŞA BASTIN');
+      return;
+    }
+    if (currentMode !== 'SERBEST') {
+      state.combo = 0;
+    }
+    word.boxes[word.index].wf=1;
+    state.shake=0.08;
+    keyClack('wrong');
+    updateHud();
+  }
+});
+
+/* ── Burst particles (subtle, not cute) ── */
+const bursts=[];
+function drawBursts(dt){
+  for(let i=bursts.length-1;i>=0;i--){
+    const b=bursts[i];
+    b.x+=b.vx*dt; b.y+=b.vy*dt; b.vy+=200*dt;
+    b.life-=dt;
+    if(b.life<=0){bursts.splice(i,1);continue;}
+    const a=b.life/b.ml;
+    if(b.type==='gold'){
+      ctx.fillStyle=`rgba(212,168,85,${a*0.7})`;
+    } else {
+      ctx.fillStyle=`rgba(230,220,200,${a*0.5})`;
+    }
+    ctx.beginPath();
+    ctx.arc(b.x,b.y,b.size*a,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+/* ── Helpers ── */
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+/* ═══════════════════════════════════════════════════════
+   REALISTIC KEYCAP — Manga/sketch style as in the photo
+   ═══════════════════════════════════════════════════════
+   Renders a tall-profile (SA-like) keycap with:
+   - Cream/off-white body with visible sketch-line texture
+   - Gold/amber accent for active key
+   - Charcoal for completed keys  
+   - Proper thick side walls and rounded top
+   - Inner concave dish
+   - Sketch lines on surface (manga art style)
+   ═══════════════════════════════════════════════════════ */
+
+// Color palettes per status
+const KEYCAP_PALETTES = {
+  waiting: {
+    topHi:'#ece3d2', topLo:'#d9cdb6',
+    wallHi:'#cabb9e', wallLo:'#a8977c',
+    rimHi:'#f5ede0', dishShadow:'rgba(0,0,0,0.08)',
+    legend:'#5a5248', legendShadow:'rgba(0,0,0,0.12)',
+    sketchColor:'rgba(90,75,55,0.07)',
+    glow:null
+  },
+  active: {
+    topHi:'#daa54a', topLo:'#c48a30',
+    wallHi:'#b07825', wallLo:'#8a5e1a',
+    rimHi:'#eec470', dishShadow:'rgba(0,0,0,0.12)',
+    legend:'#fff8ee', legendShadow:'rgba(0,0,0,0.25)',
+    sketchColor:'rgba(100,70,20,0.08)',
+    glow:'rgba(212,168,85,0.3)'
+  },
+  done: {
+    topHi:'#4a4540', topLo:'#3a3530',
+    wallHi:'#332e2a', wallLo:'#2a2520',
+    rimHi:'#5a5550', dishShadow:'rgba(0,0,0,0.15)',
+    legend:'#b0a898', legendShadow:'rgba(0,0,0,0.3)',
+    sketchColor:'rgba(200,190,170,0.04)',
+    glow:null
+  },
+  wrong: { // flash overlay values
+    fill:'rgba(196,92,74,',
+    stroke:'rgba(196,92,74,'
+  }
+};
+
+function drawKeycap(cx, cy, w, h, label, status, liftT, wrongFlash, bounce, box){
+  const DEPTH_REST = 10;
+  const DEPTH_PRESS = 3;
+  const currentDepth = DEPTH_REST - (DEPTH_REST-DEPTH_PRESS)*liftT;
+  const r = 7;
+  const bounceOff = Math.sin(bounce*Math.PI)*-8;
+  const pal = status==='active' ? getThemePalette(performance.now())
+    : status==='waiting' ? getRestPalette()
+    : KEYCAP_PALETTES[status];
+
+  ctx.save();
+  ctx.translate(cx, cy + bounceOff);
+
+  // ── Contact shadow on the plate (single soft, blurred shadow) ──
+  const shA = 0.38 + 0.14*(1-liftT);
+  const shY = h/2 + currentDepth + 5;
+  const shGrad = ctx.createRadialGradient(0, shY, 0, 0, shY, w*0.62);
+  shGrad.addColorStop(0, `rgba(0,0,0,${shA})`);
+  shGrad.addColorStop(0.55, `rgba(0,0,0,${shA*0.4})`);
+  shGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = shGrad;
+  ctx.beginPath(); ctx.ellipse(0, shY, w*0.62, h*0.16, 0, 0, Math.PI*2); ctx.fill();
+
+  const topY = -h/2 - currentDepth;   // top face position (rises as it lifts)
+  const wallBottom = h/2 + 2;         // fixed footprint on the plate, doesn't move
+  const skewX = -(5 + currentDepth*0.8); // stronger "viewed from the right" side perspective
+
+  // (switch housing is fully hidden beneath the cap's footprint -- the soft
+  // shadow above is enough to ground the key, no separate hard shape needed)
+
+  // ── Front wall: trapezoid connecting the shifted top face to the fixed footprint ──
+  const wallTop = topY + h - r;
+  const wr = Math.min(r, (wallBottom - wallTop) / 2, 6);
+  ctx.beginPath();
+  ctx.moveTo(-w/2, wallBottom);
+  ctx.lineTo(-w/2+skewX, wallTop + wr);
+  ctx.arcTo(-w/2+skewX, wallTop, -w/2+skewX+wr, wallTop, wr);
+  ctx.lineTo(w/2+skewX-wr, wallTop);
+  ctx.arcTo(w/2+skewX, wallTop, w/2+skewX, wallTop+wr, wr);
+  ctx.lineTo(w/2, wallBottom);
+  ctx.closePath();
+  let frontGrad = ctx.createLinearGradient(0, wallTop, 0, wallBottom);
+  frontGrad.addColorStop(0, pal.wallHi);
+  frontGrad.addColorStop(0.35, pal.wallLo);
+  frontGrad.addColorStop(1, pal.wallLo);
+  ctx.fillStyle = frontGrad;
+  ctx.fill();
+
+  // Thin side shading -- left edge catches a touch of light, right edge falls into shadow
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(-w/2, wallBottom);
+  ctx.lineTo(-w/2+skewX, wallTop + wr);
+  ctx.arcTo(-w/2+skewX, wallTop, -w/2+skewX+wr, wallTop, wr);
+  ctx.lineTo(w/2+skewX-wr, wallTop);
+  ctx.arcTo(w/2+skewX, wallTop, w/2+skewX, wallTop+wr, wr);
+  ctx.lineTo(w/2, wallBottom);
+  ctx.closePath();
+  ctx.clip();
+  let sideShade = ctx.createLinearGradient(-w/2, 0, w/2, 0);
+  sideShade.addColorStop(0, 'rgba(0,0,0,0.30)');
+  sideShade.addColorStop(0.35, 'rgba(0,0,0,0.06)');
+  sideShade.addColorStop(0.7, 'rgba(255,255,255,0.05)');
+  sideShade.addColorStop(1, 'rgba(255,255,255,0.14)');
+  ctx.fillStyle = sideShade;
+  ctx.fillRect(-w/2+skewX, wallTop, w, wallBottom-wallTop);
+  ctx.restore();
+
+  // Everything from here on belongs to the raised top face, so it shifts
+  // sideways together to sell the side perspective.
+  ctx.save();
+  ctx.translate(skewX, 0);
+
+  // ── Top face ──
+  roundRect(-w/2, topY, w, h, r);
+  let tGrad = ctx.createLinearGradient(0, topY, 0, topY+h);
+  tGrad.addColorStop(0, pal.rimHi);
+  tGrad.addColorStop(0.3, pal.topHi);
+  tGrad.addColorStop(1, pal.topLo);
+  ctx.fillStyle = tGrad;
+  ctx.fill();
+
+  // ── Outer rim ──
+  ctx.strokeStyle='rgba(255,255,255,0.35)';
+  ctx.lineWidth=0.75;
+  ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,0.12)';
+  ctx.lineWidth=0.5;
+  roundRect(-w/2, topY, w, h, r);
+  ctx.stroke();
+
+  // ── Glow (active only) ──
+  if(pal.glow){
+    ctx.shadowBlur=16;
+    ctx.shadowColor=pal.glow;
+    roundRect(-w/2,topY,w,h,r);
+    ctx.strokeStyle=pal.glow;
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+    ctx.shadowBlur=0;
+  }
+
+  // ── Sketch / manga lines on surface ──
+  ctx.save();
+  roundRect(-w/2+1, topY+1, w-2, h-2, r-1);
+  ctx.clip();
+  ctx.translate(-w/2, topY);
+  ctx.strokeStyle = pal.sketchColor;
+  ctx.lineWidth = 0.8;
+  if(box.sketchPath) ctx.stroke(box.sketchPath);
+  ctx.lineWidth = 1.2;
+  if(box.edgePath) ctx.stroke(box.edgePath);
+  ctx.restore();
+
+  // ── Concave dish (inner shadow, like a real sculpted keycap) ──
+  const dp = 5;
+  roundRect(-w/2+dp, topY+dp, w-dp*2, h-dp*2, r-3);
+  let dGrad = ctx.createRadialGradient(0, topY+h/2, 2, 0, topY+h/2, w*0.55);
+  dGrad.addColorStop(0, 'rgba(255,255,255,0.05)');
+  dGrad.addColorStop(0.6, 'rgba(0,0,0,0.02)');
+  dGrad.addColorStop(1, pal.dishShadow);
+  ctx.fillStyle = dGrad;
+  ctx.fill();
+
+  // ── Top edge gloss (crisp highlight along the upper rim) ──
+  ctx.save();
+  roundRect(-w/2+2, topY+1.5, w-4, Math.max(2.5, h*0.16), 5);
+  ctx.clip();
+  ctx.fillStyle = `rgba(255,255,255,${status==='active'?0.30:0.22})`;
+  ctx.fillRect(-w/2, topY, w, h*0.2);
+  ctx.restore();
+
+  // ── Bottom edge subtle shadow line (where dish meets front wall) ──
+  ctx.save();
+  roundRect(-w/2+3, topY+h-5, w-6, 3.5, 2);
+  ctx.clip();
+  ctx.fillStyle = 'rgba(0,0,0,0.10)';
+  ctx.fillRect(-w/2, topY+h-5, w, 3.5);
+  ctx.restore();
+
+  // ── Wrong flash ──
+  if(wrongFlash>0.02){
+    roundRect(-w/2, topY, w, h, r);
+    ctx.fillStyle=`rgba(196,92,74,${wrongFlash*0.3})`;
+    ctx.fill();
+    ctx.strokeStyle=`rgba(196,92,74,${wrongFlash*0.6})`;
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
+
+  // ── Legend (letter) ──
+  const fontSize = Math.round(h*0.38);
+  ctx.font = `800 ${fontSize}px 'Inter', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const lY = topY + h/2 + 1;
+
+  // Emboss shadow
+  ctx.fillStyle = pal.legendShadow;
+  ctx.fillText(label, 0.6, lY+1.4);
+
+  // Main letter
+  ctx.fillStyle = pal.legend;
+  if(status==='active'){
+    ctx.shadowColor='rgba(255,240,200,0.35)';
+    ctx.shadowBlur=5;
+  }
+  ctx.fillText(label, 0, lY);
+
+  ctx.restore(); // closes the top-face perspective translate
+  ctx.restore();
+}
+
+/* ── Draw active word ── */
+function drawWord(now, dt){
+  if (gameState === 'MENU') {
+    if (word) renderWordCase(word, wordCenter(), now, dt);
+    if (settingsWord) renderWordCase(settingsWord, settingsWordCenter(), now, dt);
+    if (storeWord) renderWordCase(storeWord, storeWordCenter(), now, dt);
+    return;
+  }
+  if(!word) return;
+  renderWordCase(word, wordCenter(), now, dt);
+}
+
+function renderWordCase(word, c, now, dt){
+  word.enter = Math.min(1, word.enter + dt*3.5);
+  const eT = easeOutBack(word.enter);
+  const scale = 0.7+0.3*eT;
+
+  ctx.save();
+  ctx.globalAlpha = word.enter;
+  ctx.translate(c.x,c.y);
+  ctx.scale(scale,scale);
+  ctx.translate(-c.x,-c.y);
+
+  // Soft warm light under keys
+  const grd=ctx.createRadialGradient(c.x,c.y+10,0,c.x,c.y+10,160);
+  grd.addColorStop(0,'rgba(212,168,85,0.06)');
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=grd;
+  ctx.beginPath();ctx.arc(c.x,c.y+10,160,0,Math.PI*2);ctx.fill();
+
+  const boxW=56, gap=12, boxH=52;
+  const totalW=word.letters.length*boxW+(word.letters.length-1)*gap;
+  const startX=c.x-totalW/2;
+
+  // ── Keyboard case/plate beneath keys ──
+  const extraBottomPad = gameState === 'PLAYING' ? 20 : 0;
+  const caseR = 14;
+  const casePad = 18;
+  const caseX = startX - casePad;
+  const caseY = c.y - boxH/2 - 10 - casePad + 4;
+  const caseW = totalW + casePad*2;
+  const caseH = boxH + 10 + casePad*2 + extraBottomPad;
+  const ct = getCaseTheme();
+
+  // Case shadow
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  roundRect(caseX+3, caseY+5, caseW, caseH, caseR+2);
+  ctx.fill();
+
+  // Main case body (kuşanılan tuş takımı temasına göre)
+  roundRect(caseX, caseY, caseW, caseH, caseR);
+  let caseGrad = ctx.createLinearGradient(caseX, caseY, caseX, caseY+caseH);
+  caseGrad.addColorStop(0, ct.caseColors[0]);
+  caseGrad.addColorStop(0.3, ct.caseColors[1]);
+  caseGrad.addColorStop(1, ct.caseColors[2]);
+  ctx.fillStyle = caseGrad;
+  ctx.fill();
+
+  // Case border
+  ctx.strokeStyle='rgba(0,0,0,0.08)';
+  ctx.lineWidth=1;
+  ctx.stroke();
+
+  // Case inner shadow (where keys sit)
+  const innerPad = 10;
+  roundRect(caseX+innerPad, caseY+innerPad, caseW-innerPad*2, caseH-innerPad*2-12, 8);
+  ctx.fillStyle=ct.innerColor;
+  ctx.fill();
+
+  // Inner plate subtle border
+  ctx.strokeStyle='rgba(0,0,0,0.15)';
+  ctx.lineWidth=0.5;
+  ctx.stroke();
+
+  // ── Taban (case altı şerit) ──
+  const woodH = 14;
+  const woodY = caseY + caseH - 4;
+  roundRect(caseX+6, woodY, caseW-12, woodH, 4);
+  let woodGrad = ctx.createLinearGradient(0,woodY,0,woodY+woodH);
+  woodGrad.addColorStop(0,ct.baseColors[0]);
+  woodGrad.addColorStop(0.5,ct.baseColors[1]);
+  woodGrad.addColorStop(1,ct.baseColors[2]);
+  ctx.fillStyle = woodGrad;
+  ctx.fill();
+
+  // Wood grain static lines
+  ctx.save();
+  roundRect(caseX+6, woodY, caseW-12, woodH, 4);
+  ctx.clip();
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.lineWidth=0.5;
+  ctx.beginPath();
+  ctx.moveTo(caseX+10, woodY+4); ctx.lineTo(caseX+caseW-10, woodY+5);
+  ctx.moveTo(caseX+10, woodY+8); ctx.lineTo(caseX+caseW-10, woodY+7);
+  ctx.moveTo(caseX+10, woodY+11); ctx.lineTo(caseX+caseW-10, woodY+12);
+  ctx.stroke();
+  ctx.restore();
+
+  // ── Progress bar (inside case, below keys) ──
+  if (gameState === 'PLAYING' && currentMode !== 'SERBEST') {
+    const elapsed=(now-word.spawnedAt)*state.tempo;
+    const remaining=Math.max(0,1-elapsed/word.duration);
+    const barY=c.y+boxH/2+14;
+    const barW=totalW;
+    const barH=4;
+
+    roundRect(startX, barY, barW, barH, 2);
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.fill();
+
+    if(barW*remaining>0){
+      roundRect(startX, barY, barW*remaining, barH, 2);
+      if(remaining<0.25){
+        ctx.fillStyle='#c45c4a';
+      } else {
+        const bg=ctx.createLinearGradient(startX,0,startX+barW,0);
+        bg.addColorStop(0,'#d4a855');
+        bg.addColorStop(1,'#c48a30');
+        ctx.fillStyle=bg;
+      }
+      ctx.fill();
+      ctx.shadowBlur=4;
+      ctx.shadowColor=remaining<0.25?'rgba(196,92,74,0.4)':'rgba(212,168,85,0.3)';
+      ctx.fill();
+      ctx.shadowBlur=0;
+    }
+  }
+
+  // ── Keycaps ──
+  word.letters.forEach((letter,i)=>{
+    const bx = startX + i*(boxW+gap) + boxW/2;
+    const box = word.boxes[i];
+    box.wf = Math.max(0, box.wf-dt*3);
+    box.pf = Math.max(0, box.pf-dt*5);
+    box.bounce = Math.max(0, box.bounce-dt*4);
+
+    let status='waiting', liftT=0;
+    if(i<word.index){status='done';liftT=0;}
+    else if(i===word.index){status='active';liftT=0.15;}
+    if(i===word.index-1) liftT=Math.max(liftT,box.pf);
+
+    drawKeycap(bx, c.y, boxW, boxH, letter, status, liftT, box.wf, box.bounce, box);
+  });
+
+  ctx.restore();
+}
+
+function easeOutBack(t){
+  const c1=1.70158,c3=c1+1;
+  return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);
+}
+
+/* ── Background ── */
+// Warm dark surface with subtle texture
+function drawBackground(now){
+  let mt = null;
+  try{ mt = getMainTheme(); }catch(e){}
+
+  if (mt && mt.animated) {
+    // RGB ana tema: her karede döngüsel renk
+    const hue = (now*0.03) % 360;
+    const bg=ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*0.7);
+    bg.addColorStop(0,`hsl(${hue},32%,20%)`);
+    bg.addColorStop(0.6,`hsl(${hue},30%,14%)`);
+    bg.addColorStop(1,`hsl(${(hue+15)%360},32%,9%)`);
+    ctx.fillStyle=bg;
+    ctx.fillRect(0,0,W,H);
+
+    const lamp=ctx.createRadialGradient(CX,CY-100,0,CX,CY-100,350);
+    lamp.addColorStop(0,`hsla(${hue},85%,62%,0.05)`);
+    lamp.addColorStop(0.5,`hsla(${hue},75%,52%,0.025)`);
+    lamp.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=lamp;
+    ctx.beginPath();ctx.arc(CX,CY-100,350,0,Math.PI*2);ctx.fill();
+    return;
+  }
+
+  const inGame = (gameState==='PLAYING' || gameState==='PAUSED' || gameState==='GAMEOVER');
+  const showMousepad = mt && mt.mousepad && inGame;
+  const useMenuFallback = mt && mt.mousepad && !inGame;
+
+  if (useMenuFallback && bgCanvasMenu) {
+    ctx.drawImage(bgCanvasMenu, 0, 0);
+  } else if (bgCanvas) {
+    ctx.drawImage(bgCanvas, 0, 0);
+  } else {
+    ctx.fillStyle = '#2c2420';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Warm light cone from above (desk lamp feel) -- kuşanılan ana temanın rengiyle
+  const lampRgb = useMenuFallback ? '212,168,85' : ((mt && mt.lamp) ? mt.lamp : '212,168,85');
+  const lamp=ctx.createRadialGradient(CX,CY-100,0,CX,CY-100,350);
+  lamp.addColorStop(0,`rgba(${lampRgb},0.04)`);
+  lamp.addColorStop(0.5,`rgba(${lampRgb},0.02)`);
+  lamp.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=lamp;
+  ctx.beginPath();ctx.arc(CX,CY-100,350,0,Math.PI*2);ctx.fill();
+}
+
+function drawGlitch(dt){
+  if(state.glitch>0){
+    ctx.save();
+    ctx.fillStyle=`rgba(196,92,74,${state.glitch*0.06})`;
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    state.glitch=Math.max(0,state.glitch-dt*2);
+  }
+}
+function updateShake(dt){
+  if(state.shake>0){
+    state.sx=(Math.random()-0.5)*state.shake*8;
+    state.sy=(Math.random()-0.5)*state.shake*8;
+    state.shake=Math.max(0,state.shake-dt*3);
+  } else { state.sx=0;state.sy=0; }
+}
+
+/* ── Infinite Keyboard Background ── */
+let menuPatternCanvas = null;
+let menuPattern = null;
+let menuBgAlpha = 1;
+let menuBgOffset = 0;
+
+function createMenuPattern() {
+  const cols = 28; // önceden 12 idi -- kare çok küçüktü ve aynı blok göz önünde tekrarlanıyordu
+  const rows = 16; // büyütülen karo sayesinde tekrar periyodu uzuyor, birleşme yerleri fark edilmiyor
+  const boxW = 56, gap = 12, boxH = 52;
+  const tileW = boxW + gap;
+  const tileH = boxH + gap;
+
+  // İçerik matrisini oluştur (harfler / kelimeler)
+  const grid = Array(rows).fill(null).map(() => Array(cols).fill(''));
+  for(let y=0; y<rows; y++){
+    let x=0;
+    while(x < cols) {
+      if (Math.random() > 0.3 && x < cols - 4) {
+        const word = WORD_POOL[Math.floor(Math.random()*WORD_POOL.length)];
+        if (x + word.length <= cols) {
+          for(let i=0; i<word.length; i++) grid[y][x+i] = word[i];
+          x += word.length;
+          continue;
+        }
+      }
+      grid[y][x] = String.fromCharCode(65 + Math.floor(Math.random()*26));
+      x++;
+    }
+  }
+
+  // Her tuş kapağının kenarlarından biraz taşan bir temas gölgesi var. Karo
+  // tuvalinin en kenarındaki sütun/satırlarda bu taşma komşu hücre olmadığı
+  // için tuval sınırında aniden kesiliyor ve desen tekrarlandığında bu kesim
+  // noktası her defasında aynı yerde belirgin bir çizgi olarak beliriyor.
+  // Çözüm: karoyu, sarmalanmış (wrap-around) komşu hücrelerden 1 hücre payla
+  // (bleed) çizip sonra tam ortadaki cols x rows bölgesini kırpıyoruz --
+  // böylece kenarlar komşu kopyayla birebir örtüşüyor ve birleşme kayboluyor.
+  const bleed = 1;
+  const bigCols = cols + bleed*2;
+  const bigRows = rows + bleed*2;
+  const bleedCanvas = document.createElement('canvas');
+  bleedCanvas.width = bigCols * tileW;
+  bleedCanvas.height = bigRows * tileH;
+  const bctx2 = bleedCanvas.getContext('2d');
+
+  const originalCtx = ctx;
+  ctx = bctx2; // drawKeycap global ctx kullanıyor, geçici olarak yönlendiriyoruz
+
+  ctx.clearRect(0,0, bleedCanvas.width, bleedCanvas.height);
+
+  for(let by=0; by<bigRows; by++){
+    for(let bx=0; bx<bigCols; bx++){
+      const gx = ((bx - bleed) % cols + cols) % cols;
+      const gy = ((by - bleed) % rows + rows) % rows;
+      const cx = bx * tileW + tileW/2;
+      const cy = by * tileH + tileH/2;
+      const seed = gx * 100 + gy * 1000;
+      const box = {
+        sketchPath: generateSketchPath(boxW, boxH, seed),
+        edgePath: generateEdgePath(boxW, boxH, seed)
+      };
+      drawKeycap(cx, cy, boxW, boxH, grid[gy][gx], 'waiting', 0, 0, 0, box);
+    }
+  }
+
+  ctx = originalCtx;
+
+  // Ortadaki tam cols x rows bölgesini (doğru taşmalarla birlikte) kırp
+  menuPatternCanvas = document.createElement('canvas');
+  menuPatternCanvas.width = cols * tileW;
+  menuPatternCanvas.height = rows * tileH;
+  const finalCtx = menuPatternCanvas.getContext('2d');
+  finalCtx.drawImage(bleedCanvas, bleed*tileW, bleed*tileH, cols*tileW, rows*tileH, 0, 0, cols*tileW, rows*tileH);
+
+  menuPattern = ctx.createPattern(menuPatternCanvas, 'repeat');
+}
+
+function updateAndDrawFallingWords(dt) {
+  if (gameState === 'PLAYING') {
+    menuBgAlpha = Math.max(0, menuBgAlpha - dt * 0.4);
+  } else {
+    menuBgAlpha = Math.min(1, menuBgAlpha + dt * 0.4);
+  }
+  
+  if (menuBgAlpha > 0 && menuPattern) {
+    menuBgOffset += dt * 55; // scroll speed
+    
+    ctx.save();
+    ctx.globalAlpha = menuBgAlpha * 0.25; // overall opacity
+    
+    ctx.translate(CX, CY);
+    ctx.rotate(Math.PI / 8); // Tilt downwards (top-left to bottom-right)
+    
+    const offset = menuBgOffset;
+    ctx.translate(-offset, 0); // flow exactly along the text reading direction
+    
+    ctx.fillStyle = menuPattern;
+    const size = menuBgDiag;
+    ctx.fillRect(-size + offset, -size, size*2, size*2);
+    
+    ctx.restore();
+  }
+}
+
+/* ── Main Loop ── */
+let lastT=performance.now();
+function loop(now){
+  const isPaused = gameState === 'PAUSED';
+  const dt = isPaused ? 0 : Math.min(0.05,(now-lastT)/1000);
+  lastT=now;
+  const frozen=now<state.frozenUntil;
+  const effectiveNow = isPaused ? pausedAt : now;
+
+  if(!frozen && !isPaused){
+    if(gameState === 'PLAYING'){
+      state.tempo+=(state.targetTempo-state.tempo)*dt*1.5;
+      if(!word&&effectiveNow>=nextSpawnAt) spawnWord();
+      if(word){
+        const elapsed=(effectiveNow-word.spawnedAt)*state.tempo;
+        if(elapsed>=word.duration) {
+          if (currentMode === 'ACIMASIZ') gameOver('SÜRE DOLDU');
+          else missWord('SÜRE DOLDU');
+        }
+      }
+    } else if (gameState === 'MENU') {
+      if(!word) spawnMenuWord();
+      if(!settingsWord) spawnSettingsMenuWord();
+      if(!storeWord) spawnStoreMenuWord();
+    }
+  }
+  updateShake(dt);
+
+  ctx.save();
+  ctx.translate(state.sx,state.sy);
+
+  drawBackground(effectiveNow);
+  updateAndDrawFallingWords(dt);
+  drawWord(effectiveNow, frozen ? 0 : dt);
+  drawBursts(dt);
+  drawGlitch(dt);
+
+  ctx.restore();
+  requestAnimationFrame(loop);
+}
+createMenuPattern();
+requestAnimationFrame(loop);
+updateHud();
+updateKeyHud();
+applyMainTheme();
+logLine('sahne hazir -- kelimeyi bar bitmeden yaz','hit');
+</script>
+</body>
+</html>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box; margin:0; padding:0;}
