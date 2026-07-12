@@ -2383,12 +2383,13 @@ function renderWordCase(word, c, now, dt){
 
   // ── Keyboard case/plate beneath keys ──
   const extraBottomPad = gameState === 'PLAYING' ? 20 : 0;
+  const trayExtra = 10; // tuşun 3D ön duvarı (footprint) plaka içinde otursun diye ek pay -- fazla boşluk bırakmayacak kadar az
   const caseR = 14;
   const casePad = 18;
   const caseX = startX - casePad;
   const caseY = c.y - boxH/2 - 10 - casePad + 4;
   const caseW = totalW + casePad*2;
-  const caseH = boxH + 10 + casePad*2 + extraBottomPad;
+  const caseH = boxH + 10 + casePad*2 + extraBottomPad + trayExtra;
   const ct = getCaseTheme();
 
   // Case shadow
