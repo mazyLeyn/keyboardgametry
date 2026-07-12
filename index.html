@@ -427,7 +427,7 @@
     <div class="store-grid" id="store-grid"></div>
     <div class="store-footer-hint">
       <div><span class="key">TAB</span><span id="store-hint-tab">KATEGORİ DEĞİŞTİR</span></div>
-      <div><span class="key">1-6</span><span id="store-hint-buy">SATIN AL / KUŞAN</span></div>
+      <div><span class="key">1-9</span><span id="store-hint-buy">SATIN AL / KUŞAN</span></div>
       <div><span class="key">ESC</span><span id="store-hint-back">MENÜYE DÖN</span></div>
     </div>
   </div>
@@ -500,7 +500,7 @@ const I18N = {
       default:'VARSAYILAN', ocean:'OKYANUS', emerald:'ZÜMRÜT', keyboard_default:'VARSAYILAN',
       black_plastic:'SİYAH PLASTİK', rgb:'RGB',
       main_default:'VARSAYILAN', main_ocean:'DERİN OKYANUS', main_ember:'KIZIL ALEV',
-      main_forest:'ORMAN', main_mousepad:'MOUSEPAD KARSTİK', main_mousepad_ocean:'MOUSEPAD OKYANUS', main_rgb:'RGB'
+      main_forest:'ORMAN', main_mousepad:'MOUSEPAD KARSTİK', main_mousepad_ocean:'MOUSEPAD OKYANUS', main_mousepad_flat:'MOUSEPAD DÜZ SİYAH', main_rgb:'RGB'
     }
   },
   en: {
@@ -540,7 +540,7 @@ const I18N = {
       default:'DEFAULT', ocean:'OCEAN', emerald:'EMERALD', keyboard_default:'DEFAULT',
       black_plastic:'BLACK PLASTIC', rgb:'RGB',
       main_default:'DEFAULT', main_ocean:'DEEP OCEAN', main_ember:'CRIMSON FLAME',
-      main_forest:'FOREST', main_mousepad:'MOUSEPAD KARST', main_mousepad_ocean:'MOUSEPAD OCEAN', main_rgb:'RGB'
+      main_forest:'FOREST', main_mousepad:'MOUSEPAD KARST', main_mousepad_ocean:'MOUSEPAD OCEAN', main_mousepad_flat:'MOUSEPAD FLAT BLACK', main_rgb:'RGB'
     }
   }
 };
@@ -599,6 +599,8 @@ function createBackgroundCache() {
     bgCanvas.width = W; bgCanvas.height = H;
     if (mt.mousepadStyle === 'ocean') {
       drawMousepadTextureOcean(bgCanvas.getContext('2d'));
+    } else if (mt.mousepadStyle === 'flat') {
+      drawMousepadTextureFlat(bgCanvas.getContext('2d'));
     } else {
       drawMousepadTexture(bgCanvas.getContext('2d'));
     }
@@ -765,6 +767,83 @@ function drawMousepadTexture(bctx) {
   roundedPath(bx,by,bw,bh,r);
   bctx.clip();
   bctx.drawImage(karstCanvas, 0, 0);
+  bctx.restore();
+
+  // Kumaş kenarının içini hafifçe karart (derinlik/kabartma hissi)
+  bctx.save();
+  roundedPath(0,0,W,H,28);
+  roundedPath(bx,by,bw,bh,r);
+  bctx.fillStyle = 'rgba(0,0,0,0.35)';
+  bctx.fill('evenodd');
+  bctx.restore();
+
+  // Dış gölge çizgisi (kabartma hissi)
+  bctx.save();
+  roundedPath(bx-1.5, by-1.5, bw+3, bh+3, r+2);
+  bctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  bctx.lineWidth = 3;
+  bctx.stroke();
+  bctx.restore();
+}
+
+/* ── Mousepad "Düz Siyah" teması: gri-siyah kumaş üzerinde ince tanecikli doku (kontursuz) ── */
+function drawMousepadTextureFlat(bctx) {
+  // ── Kumaş çerçeve (mousepad dışında kalan kenar): koyu zemin + ince kumaş dokusu ──
+  bctx.fillStyle = '#141414';
+  bctx.fillRect(0,0,W,H);
+  bctx.save();
+  bctx.globalAlpha = 0.05;
+  const step = 6;
+  for(let y=0;y<H;y+=step){
+    for(let x=0;x<W;x+=step){
+      const v = Math.sin(x*0.1+y*0.15)*0.5+0.5;
+      bctx.fillStyle = v>0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
+      bctx.fillRect(x,y,step,step);
+    }
+  }
+  bctx.restore();
+
+  const inset = Math.max(16, Math.min(W,H)*0.028);
+  const r = 22;
+  const bx=inset, by=inset, bw=W-inset*2, bh=H-inset*2;
+  const roundedPath = (x,y,w,h,rad) => {
+    bctx.beginPath();
+    bctx.moveTo(x+rad,y);
+    bctx.arcTo(x+w,y,x+w,y+h,rad);
+    bctx.arcTo(x+w,y+h,x,y+h,rad);
+    bctx.arcTo(x,y+h,x,y,rad);
+    bctx.arcTo(x,y,x+w,y,rad);
+    bctx.closePath();
+  };
+
+  // ── Düz gri-siyah kumaş dokusu: piksel bazlı ince tanecikli gürültü (görseldeki gibi) ──
+  const flatCanvas = document.createElement('canvas');
+  flatCanvas.width = W; flatCanvas.height = H;
+  const fctx = flatCanvas.getContext('2d');
+  const img = fctx.createImageData(W,H);
+  const data = img.data;
+  const base = [0x27,0x27,0x27];
+  for(let i=0;i<data.length;i+=4){
+    const n = (Math.random()-0.5)*16; // ince gri tanecik gürültüsü
+    data[i]   = Math.min(255, Math.max(0, base[0]+n));
+    data[i+1] = Math.min(255, Math.max(0, base[1]+n));
+    data[i+2] = Math.min(255, Math.max(0, base[2]+n));
+    data[i+3] = 255;
+  }
+  fctx.putImageData(img,0,0);
+
+  // Kenarlara doğru hafif kararma (derinlik hissi)
+  const vg = fctx.createRadialGradient(CX,CY,Math.min(W,H)*0.32,CX,CY,Math.max(W,H)*0.75);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,0.3)');
+  fctx.fillStyle = vg;
+  fctx.fillRect(0,0,W,H);
+
+  // Dokuyu sadece mousepad'in iç (kırpılmış) alanına bas
+  bctx.save();
+  roundedPath(bx,by,bw,bh,r);
+  bctx.clip();
+  bctx.drawImage(flatCanvas, 0, 0);
   bctx.restore();
 
   // Kumaş kenarının içini hafifçe karart (derinlik/kabartma hissi)
@@ -1073,6 +1152,7 @@ const MAIN_THEMES = [
     colors:['#1e3020','#152318','#0e1810'], lamp:'92,232,146' },
   { id:'main_mousepad', name:'MOUSEPAD KARSTİK', cost:200, mousepad:true, lamp:'230,196,140', catType:'main' },
   { id:'main_mousepad_ocean', name:'MOUSEPAD OKYANUS', cost:250, mousepad:true, mousepadStyle:'ocean', lamp:'92,180,214', catType:'main' },
+  { id:'main_mousepad_flat', name:'MOUSEPAD DÜZ SİYAH', cost:150, mousepad:true, mousepadStyle:'flat', lamp:'150,150,150', catType:'main' },
   { id:'main_rgb', name:'RGB', cost:200, animated:true, catType:'main' }
 ];
 const MAIN_SHOP_STORAGE_KEY = 'keybound_main_shop_v1';
@@ -1979,7 +2059,7 @@ window.addEventListener('keydown',(e)=>{
       e.preventDefault();
       const curIdx = STORE_TAB_ORDER.indexOf(storeTab);
       switchStoreTab(STORE_TAB_ORDER[(curIdx+1) % STORE_TAB_ORDER.length]);
-    } else if (/^[1-6]$/.test(key)) {
+    } else if (/^[1-9]$/.test(key)) {
       handleThemeSelect(parseInt(key,10)-1);
     }
     return;
