@@ -2443,7 +2443,8 @@ function drawWord(now, dt){
 function renderWordCase(word, c, now, dt){
   word.enter = Math.min(1, word.enter + dt*3.5);
   const eT = easeOutBack(word.enter);
-  const scale = 0.7+0.3*eT;
+  const UI_SCALE = 0.8; // tuşlar/yazılar/oyun içi %80 boyutta
+  const scale = (0.7+0.3*eT) * UI_SCALE;
 
   ctx.save();
   ctx.globalAlpha = word.enter;
